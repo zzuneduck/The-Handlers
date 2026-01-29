@@ -7,6 +7,7 @@ import { BUSINESS_TYPES } from '../../constants/businessTypes';
 import { STORE_SIZES } from '../../constants/storeSize';
 import { HARDWARE_TYPES } from '../../constants/hardwareTypes';
 import ImageUpload from '../../components/common/ImageUpload';
+import { logActivity } from '../../lib/activityLogger';
 
 export default function ConsultationForm() {
   const { user } = useAuthStore();
@@ -87,6 +88,17 @@ export default function ConsultationForm() {
         alert(`저장 실패: ${error.message}`);
         return;
       }
+
+      // 활동 기록
+      await logActivity({
+        type: 'consultation_new',
+        handler_id: user.id,
+        handler_name: user.name,
+        user_name: user.name,
+        description: `${storeName} 상담을 신청했습니다.`,
+        region,
+        store_name: storeName,
+      });
 
       alert('상담 신청이 완료되었습니다!');
       navigate('/handler/consultations');

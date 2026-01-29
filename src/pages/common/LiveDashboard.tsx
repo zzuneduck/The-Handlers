@@ -1,17 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ACTIVITY_TYPES } from '../../constants/activityTypes';
-import type { ActivityTypeKey } from '../../constants/activityTypes';
+import { useRealtimeActivities } from '../../hooks/useRealtimeActivities';
 
 /* ───── types ───── */
-interface ActivityRow {
-  id: string;
-  type: ActivityTypeKey;
-  user_name: string;
-  description: string;
-  created_at: string;
-}
-
 interface RankRow {
   handler_name: string;
   count: number;
@@ -42,26 +34,26 @@ export default function LiveDashboard() {
   const [todayCount, setTodayCount] = useState(0);
   const [weekCount, setWeekCount] = useState(0);
   const [monthCount, setMonthCount] = useState(0);
-  const [activities, setActivities] = useState<ActivityRow[]>([]);
   const [ranking, setRanking] = useState<RankRow[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [tick, setTick] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  /* ── fetch ── */
-  const fetchAll = useCallback(async () => {
-    const [todayRes, weekRes, monthRes, actRes, rankRes] = await Promise.all([
+  // 실시간 활동 피드 (Supabase Realtime)
+  const { activities } = useRealtimeActivities(15);
+
+  /* ── fetch stats ── */
+  const fetchStats = useCallback(async () => {
+    const [todayRes, weekRes, monthRes, rankRes] = await Promise.all([
       supabase.from('consultations').select('id', { count: 'exact', head: true }).gte('created_at', startOfDay()),
       supabase.from('consultations').select('id', { count: 'exact', head: true }).gte('created_at', startOfWeek()),
       supabase.from('consultations').select('id', { count: 'exact', head: true }).gte('created_at', startOfMonth()),
-      supabase.from('activities').select('id, type, user_name, description, created_at').order('created_at', { ascending: false }).limit(10),
       supabase.from('consultations').select('handler_name, status').eq('status', 'contracted').gte('created_at', startOfMonth()),
     ]);
 
     setTodayCount(todayRes.count ?? 0);
     setWeekCount(weekRes.count ?? 0);
     setMonthCount(monthRes.count ?? 0);
-    setActivities((actRes.data as ActivityRow[]) ?? []);
 
     // 랭킹 집계
     const map = new Map<string, number>();
@@ -75,16 +67,16 @@ export default function LiveDashboard() {
     setRanking(sorted);
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { fetchStats(); }, [fetchStats]);
 
-  // 5 초 polling + timeAgo 갱신
+  // 통계 + timeAgo 갱신 (30초마다)
   useEffect(() => {
     const id = setInterval(() => {
-      fetchAll();
+      fetchStats();
       setTick((t) => t + 1);
-    }, 5000);
+    }, 30000);
     return () => clearInterval(id);
-  }, [fetchAll]);
+  }, [fetchStats]);
 
   // suppress unused warning
   void tick;
@@ -122,12 +114,18 @@ export default function LiveDashboard() {
           THE HANDLERS{' '}
           <span className="text-[#03C75A] drop-shadow-[0_0_8px_#03C75A]">실시간 현황</span>
         </h1>
-        <button
-          onClick={toggleFullscreen}
-          className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300 backdrop-blur hover:bg-white/10 transition-colors"
-        >
-          {isFullscreen ? '축소' : '전체화면'}
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 text-xs text-gray-500">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#03C75A] shadow-[0_0_6px_#03C75A]" />
+            LIVE
+          </span>
+          <button
+            onClick={toggleFullscreen}
+            className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300 backdrop-blur hover:bg-white/10 transition-colors"
+          >
+            {isFullscreen ? '축소' : '전체화면'}
+          </button>
+        </div>
       </div>
 
       {/* 2. 통계 카드 */}
@@ -163,15 +161,14 @@ export default function LiveDashboard() {
             <p className="py-12 text-center text-sm text-gray-600">아직 활동이 없습니다.</p>
           ) : (
             <ul className="space-y-1">
-              {activities.map((a, i) => {
+              {activities.map((a) => {
                 const info = ACTIVITY_TYPES[a.type] ?? { icon: '📌', label: a.type };
                 return (
                   <li
                     key={a.id}
-                    className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5"
-                    style={{
-                      animation: `fadeSlideIn 0.4s ease ${i * 0.06}s both`,
-                    }}
+                    className={`flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 ${
+                      a.isNew ? 'animate-slideIn' : ''
+                    }`}
                   >
                     <span className="mt-0.5 text-xl leading-none">{info.icon}</span>
                     <div className="flex-1 min-w-0">
@@ -179,6 +176,12 @@ export default function LiveDashboard() {
                         <span className="font-semibold text-white">{a.user_name}</span>{' '}
                         {a.description}
                       </p>
+                      {a.store_name && (
+                        <p className="mt-0.5 text-xs text-gray-500">
+                          {a.store_name}
+                          {a.region ? ` · ${a.region}` : ''}
+                        </p>
+                      )}
                       <p className="mt-0.5 text-xs text-gray-600">{timeAgo(a.created_at)}</p>
                     </div>
                     <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-gray-400">
@@ -227,11 +230,18 @@ export default function LiveDashboard() {
         </div>
       </div>
 
-      {/* keyframe animation */}
+      {/* keyframe animations */}
       <style>{`
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(-8px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(-20px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        .animate-slideIn {
+          animation: slideIn 0.5s ease-out;
         }
       `}</style>
     </div>

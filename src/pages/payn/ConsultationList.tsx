@@ -8,6 +8,7 @@ import type { ConsultationStatusKey } from '../../constants/consultationStatus';
 import { REGIONS } from '../../constants/regions';
 import { BUSINESS_TYPES } from '../../constants/businessTypes';
 import { downloadExcel } from '../../lib/excel';
+import { logActivity } from '../../lib/activityLogger';
 
 interface ConsultationRow {
   id: string;
@@ -113,9 +114,23 @@ export default function ConsultationList() {
     if (error) {
       alert(`상태 변경 실패: ${error.message}`);
     } else {
+      const row = rows.find((r) => r.id === id);
       setRows((prev) =>
         prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r)),
       );
+
+      // 계약완료 시 활동 기록
+      if (newStatus === 'contracted' && row) {
+        await logActivity({
+          type: 'contract_success',
+          handler_id: '',
+          handler_name: row.handler_name,
+          user_name: row.handler_name,
+          description: `${row.store_name} 계약이 완료되었습니다!`,
+          region: row.region,
+          store_name: row.store_name,
+        });
+      }
     }
     setUpdating(null);
   };
