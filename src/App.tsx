@@ -11,6 +11,8 @@ import DashboardLayout from './components/layout/DashboardLayout';
 // Auth
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 
 // Admin
 import AdminDashboard from './pages/admin/Dashboard';
@@ -88,6 +90,11 @@ function AppRoutes() {
         path="/register"
         element={user ? <Navigate to={USER_ROLES[user.role as Role].dashboard} /> : <RegisterPage />}
       />
+      <Route
+        path="/forgot-password"
+        element={user ? <Navigate to={USER_ROLES[user.role as Role].dashboard} /> : <ForgotPassword />}
+      />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Protected */}
       <Route element={<ProtectedRoute />}>
