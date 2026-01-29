@@ -86,6 +86,7 @@ export default function Sidebar() {
             key={item.path}
             to={item.path}
             end={item.path === basePath}
+            data-sound="hover"
             className={({ isActive }) =>
               `block rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${
                 isActive
@@ -104,6 +105,7 @@ export default function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
+            data-sound="hover"
             className={({ isActive }) =>
               `block rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${
                 isActive

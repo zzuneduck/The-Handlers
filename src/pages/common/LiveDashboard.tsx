@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ACTIVITY_TYPES } from '../../constants/activityTypes';
 import { useRealtimeActivities } from '../../hooks/useRealtimeActivities';
+import { soundManager } from '../../lib/soundManager';
 
 /* ───── types ───── */
 interface RankRow {
@@ -41,6 +42,26 @@ export default function LiveDashboard() {
 
   // 실시간 활동 피드 (Supabase Realtime)
   const { activities } = useRealtimeActivities(15);
+  const prevCountRef = useRef(0);
+
+  // 새 활동 도착 시 사운드
+  useEffect(() => {
+    if (activities.length === 0) return;
+    if (prevCountRef.current === 0) {
+      // 최초 로드 시에는 사운드 안 냄
+      prevCountRef.current = activities.length;
+      return;
+    }
+    if (activities.length > prevCountRef.current) {
+      const newest = activities[0];
+      if (newest?.type === 'contract_success') {
+        soundManager.play('success');
+      } else {
+        soundManager.play('notification');
+      }
+    }
+    prevCountRef.current = activities.length;
+  }, [activities]);
 
   /* ── fetch stats ── */
   const fetchStats = useCallback(async () => {

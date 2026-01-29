@@ -67,6 +67,8 @@ import FreeBoard from './pages/common/FreeBoard';
 import UsefulLinks from './pages/common/UsefulLinks';
 import SalesTemplates from './pages/common/SalesTemplates';
 import PaynManual from './pages/common/PaynManual';
+import GlobalSoundProvider from './components/common/GlobalSoundProvider';
+import SoundToggle from './components/common/SoundToggle';
 
 function AppRoutes() {
   const { user, loading } = useAuthStore();
@@ -182,7 +184,10 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <GlobalSoundProvider>
+        <AppRoutes />
+        <SoundToggle />
+      </GlobalSoundProvider>
     </BrowserRouter>
   );
 }
