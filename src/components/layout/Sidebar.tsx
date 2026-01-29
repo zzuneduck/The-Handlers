@@ -51,6 +51,7 @@ const MENU_ITEMS: Record<Role, MenuItem[]> = {
     { label: '영업 기록', path: '/handler/sales/new' },
     { label: '내 영업', path: '/handler/sales' },
     { label: '매장 검색', path: '/handler/stores' },
+    { label: '핸들러 목록', path: '/handler/handlers' },
     { label: '내 프로필', path: '/handler/profile' },
     { label: 'PayN 질의응답', path: '/payn-manual' },
     { label: '통계', path: '/handler/statistics' },
