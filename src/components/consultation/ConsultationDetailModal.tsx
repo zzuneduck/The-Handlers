@@ -32,7 +32,7 @@ interface Props {
   onClose: () => void;
 }
 
-function getLabel(list: { value: string; label: string }[], value: string) {
+function getLabel(list: readonly { readonly value: string; readonly label: string }[], value: string) {
   return list.find((i) => i.value === value)?.label ?? value;
 }
 
