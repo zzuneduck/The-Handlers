@@ -6,6 +6,7 @@ import type { HardwareStatusKey } from '../../constants/hardwareStatus';
 import { HARDWARE_TYPES } from '../../constants/hardwareTypes';
 import { REGIONS } from '../../constants/regions';
 import { downloadExcel } from '../../lib/excel';
+import { useToast } from '../../hooks/useToast';
 
 interface HardwareRow {
   id: string;
@@ -44,6 +45,7 @@ function formatDate(iso: string) {
 
 export default function HardwareList() {
   const { user } = useAuthStore();
+  const toast = useToast();
   const [rows, setRows] = useState<HardwareRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -90,7 +92,7 @@ export default function HardwareList() {
       .eq('id', id);
 
     if (error) {
-      alert(`상태 변경 실패: ${error.message}`);
+      toast.error(`상태 변경 실패: ${error.message}`);
     } else {
       setRows((prev) =>
         prev.map((r) => (r.id === id ? { ...r, hardware_status: newStatus } : r)),

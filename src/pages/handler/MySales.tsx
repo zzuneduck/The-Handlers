@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import { useToast } from '../../hooks/useToast';
 
 interface SalesRow {
   id: string;
@@ -25,6 +26,7 @@ function startOfMonth() {
 
 export default function MySales() {
   const { user } = useAuthStore();
+  const toast = useToast();
   const [rows, setRows] = useState<SalesRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function MySales() {
     setDeleting(id);
     const { error } = await supabase.from('sales_records').delete().eq('id', id);
     if (error) {
-      alert(`삭제 실패: ${error.message}`);
+      toast.error(`삭제 실패: ${error.message}`);
     } else {
       setRows((prev) => prev.filter((r) => r.id !== id));
     }

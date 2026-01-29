@@ -69,6 +69,10 @@ import SalesTemplates from './pages/common/SalesTemplates';
 import PaynManual from './pages/common/PaynManual';
 import GlobalSoundProvider from './components/common/GlobalSoundProvider';
 import SoundToggle from './components/common/SoundToggle';
+import NotFound from './pages/common/NotFound';
+import { ToastProvider } from './contexts/ToastContext';
+import ToastContainer from './components/ui/Toast';
+import { useToast } from './hooks/useToast';
 
 function AppRoutes() {
   const { user, loading } = useAuthStore();
@@ -170,7 +174,7 @@ function AppRoutes() {
       </Route>
 
       {/* Catch-all */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
@@ -184,10 +188,18 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <GlobalSoundProvider>
-        <AppRoutes />
-        <SoundToggle />
-      </GlobalSoundProvider>
+      <ToastProvider>
+        <GlobalSoundProvider>
+          <AppRoutes />
+          <SoundToggle />
+        </GlobalSoundProvider>
+        <ToastRenderer />
+      </ToastProvider>
     </BrowserRouter>
   );
+}
+
+function ToastRenderer() {
+  const { toasts, remove } = useToast();
+  return <ToastContainer toasts={toasts} onRemove={remove} />;
 }

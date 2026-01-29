@@ -8,10 +8,12 @@ import { STORE_SIZES } from '../../constants/storeSize';
 import { HARDWARE_TYPES } from '../../constants/hardwareTypes';
 import ImageUpload from '../../components/common/ImageUpload';
 import { logActivity } from '../../lib/activityLogger';
+import { useToast } from '../../hooks/useToast';
 
 export default function ConsultationForm() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const toast = useToast();
   const [submitting, setSubmitting] = useState(false);
 
   // 필수 항목
@@ -50,7 +52,7 @@ export default function ConsultationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!privacyAgreed) {
-      alert('개인정보 수집 및 이용에 동의해주세요.');
+      toast.warning('개인정보 수집 및 이용에 동의해주세요.');
       return;
     }
     if (!user) return;
@@ -85,7 +87,7 @@ export default function ConsultationForm() {
       });
 
       if (error) {
-        alert(`저장 실패: ${error.message}`);
+        toast.error(`저장 실패: ${error.message}`);
         return;
       }
 
@@ -100,10 +102,10 @@ export default function ConsultationForm() {
         store_name: storeName,
       });
 
-      alert('상담 신청이 완료되었습니다!');
+      toast.success('상담 신청이 완료되었습니다!');
       navigate('/handler/consultations');
     } catch (err) {
-      alert('오류가 발생했습니다.');
+      toast.error('오류가 발생했습니다.');
       console.error(err);
     } finally {
       setSubmitting(false);

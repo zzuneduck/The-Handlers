@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import { useToast } from '../../hooks/useToast';
 
 interface BoardRow {
   id: number;
@@ -18,6 +19,7 @@ function formatDate(iso: string) {
 
 export default function FreeBoard() {
   const user = useAuthStore((s) => s.user);
+  const toast = useToast();
   const [rows, setRows] = useState<BoardRow[]>([]);
   const [authorMap, setAuthorMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -101,7 +103,7 @@ export default function FreeBoard() {
     });
 
     if (error) {
-      alert(`작성 실패: ${error.message}`);
+      toast.error(`작성 실패: ${error.message}`);
     } else {
       setTitle('');
       setContent('');
@@ -116,7 +118,7 @@ export default function FreeBoard() {
 
     const { error } = await supabase.from('free_board').delete().eq('id', id);
     if (error) {
-      alert(`삭제 실패: ${error.message}`);
+      toast.error(`삭제 실패: ${error.message}`);
     } else {
       setRows((prev) => prev.filter((r) => r.id !== id));
       if (openId === id) setOpenId(null);

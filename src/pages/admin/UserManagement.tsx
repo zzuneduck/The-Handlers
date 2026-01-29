@@ -4,6 +4,7 @@ import { USER_ROLES } from '../../constants/roles';
 import type { RoleKey } from '../../constants/roles';
 import { HANDLER_LEVELS } from '../../constants/levels';
 import type { HandlerLevelKey } from '../../constants/levels';
+import { useToast } from '../../hooks/useToast';
 
 interface UserRow {
   id: string;
@@ -37,6 +38,7 @@ function formatDate(iso: string) {
 }
 
 export default function UserManagement() {
+  const toast = useToast();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('all');
@@ -76,7 +78,7 @@ export default function UserManagement() {
     setUpdating(id);
     const { error } = await supabase.from('profiles').update(updates).eq('id', id);
     if (error) {
-      alert(`업데이트 실패: ${error.message}`);
+      toast.error(`업데이트 실패: ${error.message}`);
     } else {
       setUsers((prev) =>
         prev.map((u) => (u.id === id ? { ...u, ...updates } : u)),

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { useToast } from '../../hooks/useToast';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -8,6 +9,7 @@ export default function ResetPassword() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ export default function ResetPassword() {
     if (updateError) {
       setError(updateError.message);
     } else {
-      alert('비밀번호가 변경되었습니다. 다시 로그인해주세요.');
+      toast.success('비밀번호가 변경되었습니다. 다시 로그인해주세요.');
       await supabase.auth.signOut();
       navigate('/login', { replace: true });
     }

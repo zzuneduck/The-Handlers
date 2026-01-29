@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { RESOURCE_CATEGORIES } from '../../constants/resourceCategories';
+import { useToast } from '../../hooks/useToast';
 
 interface ResourceRow {
   id: string;
@@ -22,6 +23,7 @@ function formatDate(iso: string) {
 
 export default function SalesTemplates() {
   const user = useAuthStore((s) => s.user);
+  const toast = useToast();
   const isAdmin = user?.role === 'super_admin' || user?.role === 'sub_admin';
 
   const [rows, setRows] = useState<ResourceRow[]>([]);
@@ -96,7 +98,7 @@ export default function SalesTemplates() {
     });
 
     if (error) {
-      alert(`등록 실패: ${error.message}`);
+      toast.error(`등록 실패: ${error.message}`);
     } else {
       setTitle('');
       setDescription('');
@@ -113,7 +115,7 @@ export default function SalesTemplates() {
 
     const { error } = await supabase.from('resources').delete().eq('id', id);
     if (error) {
-      alert(`삭제 실패: ${error.message}`);
+      toast.error(`삭제 실패: ${error.message}`);
     } else {
       setRows((prev) => prev.filter((r) => r.id !== id));
     }

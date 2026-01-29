@@ -9,6 +9,7 @@ import { REGIONS } from '../../constants/regions';
 import { BUSINESS_TYPES } from '../../constants/businessTypes';
 import { downloadExcel } from '../../lib/excel';
 import { logActivity } from '../../lib/activityLogger';
+import { useToast } from '../../hooks/useToast';
 
 interface ConsultationRow {
   id: string;
@@ -49,6 +50,7 @@ function formatDate(iso: string) {
 
 export default function ConsultationList() {
   const { user } = useAuthStore();
+  const toast = useToast();
   const [rows, setRows] = useState<ConsultationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -112,7 +114,7 @@ export default function ConsultationList() {
       .eq('id', id);
 
     if (error) {
-      alert(`상태 변경 실패: ${error.message}`);
+      toast.error(`상태 변경 실패: ${error.message}`);
     } else {
       const row = rows.find((r) => r.id === id);
       setRows((prev) =>

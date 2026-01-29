@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { LINK_CATEGORIES } from '../../constants/linkCategories';
+import { useToast } from '../../hooks/useToast';
 
 interface LinkRow {
   id: string;
@@ -16,6 +17,7 @@ const CATEGORY_KEYS = Object.keys(LINK_CATEGORIES);
 
 export default function UsefulLinks() {
   const user = useAuthStore((s) => s.user);
+  const toast = useToast();
   const isAdmin = user?.role === 'super_admin' || user?.role === 'sub_admin';
 
   const [links, setLinks] = useState<LinkRow[]>([]);
@@ -71,7 +73,7 @@ export default function UsefulLinks() {
     });
 
     if (error) {
-      alert(`등록 실패: ${error.message}`);
+      toast.error(`등록 실패: ${error.message}`);
     } else {
       setTitle('');
       setUrl('');
@@ -88,7 +90,7 @@ export default function UsefulLinks() {
 
     const { error } = await supabase.from('links').delete().eq('id', id);
     if (error) {
-      alert(`삭제 실패: ${error.message}`);
+      toast.error(`삭제 실패: ${error.message}`);
     } else {
       setLinks((prev) => prev.filter((l) => l.id !== id));
     }

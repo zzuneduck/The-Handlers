@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { QNA_CATEGORIES } from '../../constants/qnaCategories';
+import { useToast } from '../../hooks/useToast';
 
 interface QnaRow {
   id: string;
@@ -33,6 +34,7 @@ function formatDate(iso: string) {
 
 export default function QnA() {
   const { user } = useAuthStore();
+  const toast = useToast();
   const [questions, setQuestions] = useState<QnaRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -123,7 +125,7 @@ export default function QnA() {
 
   const handleCreateQuestion = async () => {
     if (!formTitle.trim() || !formContent.trim()) {
-      alert('제목과 내용을 입력하세요.');
+      toast.warning('제목과 내용을 입력하세요.');
       return;
     }
     if (!user) return;
@@ -137,7 +139,7 @@ export default function QnA() {
     });
 
     if (error) {
-      alert(`작성 실패: ${error.message}`);
+      toast.error(`작성 실패: ${error.message}`);
     } else {
       setShowModal(false);
       fetchQuestions();
@@ -148,7 +150,7 @@ export default function QnA() {
   /* ── 답변 작성 ── */
   const handleAnswer = async (qnaId: string) => {
     if (!answerText.trim()) {
-      alert('답변을 입력하세요.');
+      toast.warning('답변을 입력하세요.');
       return;
     }
     if (!user) return;
@@ -160,7 +162,7 @@ export default function QnA() {
       .eq('id', qnaId);
 
     if (error) {
-      alert(`답변 실패: ${error.message}`);
+      toast.error(`답변 실패: ${error.message}`);
     } else {
       setQuestions((prev) =>
         prev.map((q) =>

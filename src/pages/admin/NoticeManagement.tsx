@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import { useToast } from '../../hooks/useToast';
 
 interface NoticeRow {
   id: string;
@@ -18,6 +19,7 @@ function formatDate(iso: string) {
 
 export default function NoticeManagement() {
   const { user } = useAuthStore();
+  const toast = useToast();
   const [notices, setNotices] = useState<NoticeRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -100,7 +102,7 @@ export default function NoticeManagement() {
   /* ── 저장 (생성/수정) ── */
   const handleSave = async () => {
     if (!formTitle.trim() || !formContent.trim()) {
-      alert('제목과 내용을 입력하세요.');
+      toast.warning('제목과 내용을 입력하세요.');
       return;
     }
 
@@ -114,7 +116,7 @@ export default function NoticeManagement() {
         .eq('id', editingId);
 
       if (error) {
-        alert(`수정 실패: ${error.message}`);
+        toast.error(`수정 실패: ${error.message}`);
         setSubmitting(false);
         return;
       }
@@ -128,7 +130,7 @@ export default function NoticeManagement() {
       });
 
       if (error) {
-        alert(`작성 실패: ${error.message}`);
+        toast.error(`작성 실패: ${error.message}`);
         setSubmitting(false);
         return;
       }
@@ -145,7 +147,7 @@ export default function NoticeManagement() {
 
     const { error } = await supabase.from('notices').delete().eq('id', id);
     if (error) {
-      alert(`삭제 실패: ${error.message}`);
+      toast.error(`삭제 실패: ${error.message}`);
     } else {
       setNotices((prev) => prev.filter((n) => n.id !== id));
     }
@@ -159,7 +161,7 @@ export default function NoticeManagement() {
       .eq('id', id);
 
     if (error) {
-      alert(`변경 실패: ${error.message}`);
+      toast.error(`변경 실패: ${error.message}`);
     } else {
       setNotices((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_pinned: !currentPinned } : n)),

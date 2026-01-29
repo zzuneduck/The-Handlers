@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import { useToast } from '../../hooks/useToast';
 
 interface TipRow {
   id: string;
@@ -18,6 +19,7 @@ function formatDate(iso: string) {
 
 export default function PaynTips() {
   const user = useAuthStore((s) => s.user);
+  const toast = useToast();
   const [rows, setRows] = useState<TipRow[]>([]);
   const [authorMap, setAuthorMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -91,7 +93,7 @@ export default function PaynTips() {
     });
 
     if (error) {
-      alert(`작성 실패: ${error.message}`);
+      toast.error(`작성 실패: ${error.message}`);
     } else {
       setTitle('');
       setContent('');

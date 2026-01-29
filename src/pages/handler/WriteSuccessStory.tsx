@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import { useToast } from '../../hooks/useToast';
 
 export default function WriteSuccessStory() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -26,14 +28,14 @@ export default function WriteSuccessStory() {
       });
 
       if (error) {
-        alert(`저장 실패: ${error.message}`);
+        toast.error(`저장 실패: ${error.message}`);
         return;
       }
 
-      alert('성공 후기가 등록되었습니다!');
+      toast.success('성공 후기가 등록되었습니다!');
       navigate('/success-stories');
     } catch (err) {
-      alert('오류가 발생했습니다.');
+      toast.error('오류가 발생했습니다.');
       console.error(err);
     } finally {
       setSubmitting(false);
