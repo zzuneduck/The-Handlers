@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import type { ToastItem } from '../../contexts/ToastContext';
 
 const STYLE: Record<string, { bg: string; border: string; text: string; icon: string }> = {
-  success: { bg: 'bg-[#e6f9ef]', border: 'border-[#03C75A]', text: 'text-[#03C75A]', icon: '✓' },
-  error:   { bg: 'bg-red-50',    border: 'border-red-400',    text: 'text-red-600',    icon: '✕' },
-  info:    { bg: 'bg-blue-50',   border: 'border-blue-400',   text: 'text-blue-600',   icon: 'ℹ' },
-  warning: { bg: 'bg-yellow-50', border: 'border-yellow-400', text: 'text-yellow-700', icon: '!' },
+  success: { bg: 'bg-[#e6f9ef] dark:bg-[#0a2e1a]', border: 'border-[#03C75A]', text: 'text-[#03C75A]', icon: '✓' },
+  error:   { bg: 'bg-red-50 dark:bg-red-950',       border: 'border-red-400',    text: 'text-red-600 dark:text-red-400',    icon: '✕' },
+  info:    { bg: 'bg-blue-50 dark:bg-blue-950',      border: 'border-blue-400',   text: 'text-blue-600 dark:text-blue-400',  icon: 'ℹ' },
+  warning: { bg: 'bg-yellow-50 dark:bg-yellow-950',  border: 'border-yellow-400', text: 'text-yellow-700 dark:text-yellow-400', icon: '!' },
 };
 
 function ToastSingle({ toast, onRemove }: { toast: ToastItem; onRemove: () => void }) {
@@ -27,7 +27,7 @@ function ToastSingle({ toast, onRemove }: { toast: ToastItem; onRemove: () => vo
         visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       }`}
     >
-      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${s.text} bg-white text-sm font-bold shadow-sm`}>
+      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${s.text} bg-white dark:bg-gray-800 text-sm font-bold shadow-sm`}>
         {s.icon}
       </span>
       <p className={`flex-1 text-sm font-medium ${s.text}`}>{toast.message}</p>

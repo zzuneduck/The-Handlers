@@ -22,7 +22,7 @@ export default function SoundToggle() {
     <div ref={panelRef} className="fixed bottom-5 right-5 z-40">
       {/* 볼륨 슬라이더 패널 */}
       {open && !muted && (
-        <div className="mb-3 w-48 rounded-xl border border-gray-200 bg-white p-4 shadow-xl">
+        <div className="mb-3 w-48 rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-600 dark:bg-gray-800">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span>볼륨</span>
             <span>{Math.round(volume * 100)}%</span>
@@ -44,7 +44,7 @@ export default function SoundToggle() {
         {!muted && (
           <button
             onClick={() => setOpen((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-xs shadow-lg transition-all hover:scale-110 active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-xs shadow-lg transition-all hover:scale-110 active:scale-95 dark:border-gray-600 dark:bg-gray-800"
             title="볼륨 조절"
           >
             <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -54,7 +54,7 @@ export default function SoundToggle() {
         )}
         <button
           onClick={toggleMute}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-lg shadow-lg transition-all hover:scale-110 hover:shadow-xl active:scale-95"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-lg shadow-lg transition-all hover:scale-110 hover:shadow-xl active:scale-95 dark:border-gray-600 dark:bg-gray-800"
           title={muted ? '사운드 켜기' : '사운드 끄기'}
         >
           {muted ? (

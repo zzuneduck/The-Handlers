@@ -76,7 +76,7 @@ export default function Sidebar() {
   const basePath = USER_ROLES[role].dashboard;
 
   return (
-    <aside className="flex w-60 flex-col border-r border-gray-200 bg-sidebar text-white">
+    <aside className="flex w-60 flex-col border-r border-gray-200 bg-sidebar text-white dark:border-gray-700">
       <div className="border-b border-sidebar-dark px-4 py-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-naver">메뉴</p>
       </div>

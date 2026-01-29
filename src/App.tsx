@@ -69,8 +69,10 @@ import SalesTemplates from './pages/common/SalesTemplates';
 import PaynManual from './pages/common/PaynManual';
 import GlobalSoundProvider from './components/common/GlobalSoundProvider';
 import SoundToggle from './components/common/SoundToggle';
+import ThemeToggle from './components/common/ThemeToggle';
 import NotFound from './pages/common/NotFound';
 import { ToastProvider } from './contexts/ToastContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ToastContainer from './components/ui/Toast';
 import { useToast } from './hooks/useToast';
 
@@ -79,7 +81,7 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-naver border-t-transparent" />
       </div>
     );
@@ -188,13 +190,16 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <ToastProvider>
-        <GlobalSoundProvider>
-          <AppRoutes />
-          <SoundToggle />
-        </GlobalSoundProvider>
-        <ToastRenderer />
-      </ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <GlobalSoundProvider>
+            <AppRoutes />
+            <ThemeToggle />
+            <SoundToggle />
+          </GlobalSoundProvider>
+          <ToastRenderer />
+        </ToastProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
