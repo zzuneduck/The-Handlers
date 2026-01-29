@@ -74,7 +74,8 @@ export default function HandlerMap() {
       setLoading(false);
 
       // 4. 마커 + 인포윈도우
-      let openInfoWindow: naver.maps.InfoWindow | null = null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let openInfoWindow: any = null;
 
       handlers.forEach((h) => {
         const level = h.handler_level ?? 1;
@@ -85,7 +86,7 @@ export default function HandlerMap() {
           title: h.name,
           icon: {
             content: getMarkerSvg(color),
-            anchor: new naver.maps.Point(14, 36),
+            anchor: new window.naver.maps.Point(14, 36),
           },
         });
 
@@ -99,7 +100,7 @@ export default function HandlerMap() {
           </div>
         `);
 
-        naver.maps.Event.addListener(marker, 'click', () => {
+        window.naver.maps.Event.addListener(marker, 'click', () => {
           if (openInfoWindow) openInfoWindow.close();
           infoWindow.open(map, marker);
           openInfoWindow = infoWindow;
@@ -107,7 +108,7 @@ export default function HandlerMap() {
       });
 
       // 지도 클릭 시 인포윈도우 닫기
-      naver.maps.Event.addListener(map, 'click', () => {
+      window.naver.maps.Event.addListener(map, 'click', () => {
         if (openInfoWindow) {
           openInfoWindow.close();
           openInfoWindow = null;
