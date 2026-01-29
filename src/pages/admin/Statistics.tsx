@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { REGIONS } from '../../constants/regions';
 import {
   ResponsiveContainer,
   BarChart,
@@ -183,7 +182,7 @@ export default function Statistics() {
                   outerRadius={85}
                   dataKey="value"
                   label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
+                    `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
                   }
                   labelLine={false}
                 >
