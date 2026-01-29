@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { USER_ROLES } from '../../constants/roles';
 import type { Role } from '../../types';
@@ -5,12 +6,14 @@ import type { Role } from '../../types';
 export default function Header() {
   const { user, logout } = useAuthStore();
 
+  const dashboardPath = user ? USER_ROLES[user.role as Role]?.dashboard ?? '/' : '/';
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-bold text-text">
-          <span className="text-naver">The</span> Handlers
-        </h1>
+        <Link to={dashboardPath} className="text-xl font-bold text-text transition-opacity hover:opacity-80">
+          The Handlers
+        </Link>
       </div>
       {user && (
         <div className="flex items-center gap-4">
