@@ -38,6 +38,7 @@ import MySales from './pages/handler/MySales';
 import StoreSearch from './pages/handler/StoreSearch';
 import WriteSuccessStory from './pages/handler/WriteSuccessStory';
 import HandlerStatistics from './pages/handler/Statistics';
+import MyPoints from './pages/handler/MyPoints';
 
 // PayN
 import PaynDashboard from './pages/payn/Dashboard';
@@ -137,6 +138,7 @@ function AppRoutes() {
             <Route path="/handler/stores" element={<StoreSearch />} />
             <Route path="/handler/success-story/new" element={<WriteSuccessStory />} />
             <Route path="/handler/statistics" element={<HandlerStatistics />} />
+            <Route path="/handler/points" element={<MyPoints />} />
           </Route>
 
           {/* PayN Staff */}

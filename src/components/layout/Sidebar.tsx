@@ -40,6 +40,7 @@ const MENU_GROUPS: Record<Role, MenuGroup[]> = {
     ]},
     { group: '기타', items: [
       { label: '실시간 전광판', path: '/live' },
+      { label: '내 포인트', path: '/handler/points' },
       { label: '내 프로필', path: '/handler/profile' },
     ]},
   ],

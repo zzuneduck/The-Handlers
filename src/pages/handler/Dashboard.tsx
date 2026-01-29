@@ -6,6 +6,7 @@ import { HANDLER_LEVELS } from '../../constants/levels';
 import { CONSULTATION_STATUS } from '../../constants/consultationStatus';
 import type { ConsultationStatusKey } from '../../constants/consultationStatus';
 import type { HandlerLevelKey } from '../../constants/levels';
+import AttendanceCard from '../../components/attendance/AttendanceCard';
 
 interface RecentConsultation {
   id: string;
@@ -137,6 +138,9 @@ export default function HandlerDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* 0. 출석 체크 */}
+      <AttendanceCard />
+
       {/* 1. 환영 메시지 + 빠른 상담 신청 */}
       <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
