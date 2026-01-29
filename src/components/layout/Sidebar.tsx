@@ -33,6 +33,7 @@ const MENU_ITEMS: Record<Role, MenuItem[]> = {
   payn_staff: [
     { label: '대시보드', path: '/payn' },
     { label: '상담 목록', path: '/payn/consultations' },
+    { label: 'PayN 질의응답', path: '/payn-manual' },
     { label: '통계', path: '/payn/statistics' },
     { label: '랭킹', path: '/payn/ranking' },
   ],
@@ -51,6 +52,7 @@ const MENU_ITEMS: Record<Role, MenuItem[]> = {
     { label: '내 영업', path: '/handler/sales' },
     { label: '매장 검색', path: '/handler/stores' },
     { label: '내 프로필', path: '/handler/profile' },
+    { label: 'PayN 질의응답', path: '/payn-manual' },
     { label: '통계', path: '/handler/statistics' },
   ],
 };
