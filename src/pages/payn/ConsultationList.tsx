@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { CONSULTATION_STATUS } from '../../constants/consultationStatus';
 import type { ConsultationStatusKey } from '../../constants/consultationStatus';
@@ -44,6 +45,7 @@ function formatDate(iso: string) {
 }
 
 export default function ConsultationList() {
+  const { user } = useAuthStore();
   const [rows, setRows] = useState<ConsultationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -106,6 +108,17 @@ export default function ConsultationList() {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#03C75A] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (user?.role === 'payn_staff' && !user?.is_approved) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-8 text-center">
+          <p className="text-lg font-semibold text-yellow-700">관리자 승인 대기 중입니다</p>
+          <p className="mt-2 text-sm text-yellow-600">승인이 완료되면 이 페이지를 이용할 수 있습니다.</p>
+        </div>
       </div>
     );
   }

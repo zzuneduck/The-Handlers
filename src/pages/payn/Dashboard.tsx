@@ -101,6 +101,17 @@ export default function PaynStaffDashboard() {
     );
   }
 
+  if (user?.role === 'payn_staff' && !user?.is_approved) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-8 text-center">
+          <p className="text-lg font-semibold text-yellow-700">관리자 승인 대기 중입니다</p>
+          <p className="mt-2 text-sm text-yellow-600">승인이 완료되면 이 페이지를 이용할 수 있습니다.</p>
+        </div>
+      </div>
+    );
+  }
+
   const conversionRate = monthTotal > 0 ? ((monthContracted / monthTotal) * 100).toFixed(1) : '0.0';
 
   const stats = [

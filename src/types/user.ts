@@ -13,4 +13,5 @@ export interface Profile {
   region: string | null;
   created_at: string;
   is_active: boolean;
+  is_approved: boolean;
 }

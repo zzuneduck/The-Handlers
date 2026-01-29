@@ -99,6 +99,17 @@ export default function GeotechStaffDashboard() {
     );
   }
 
+  if (user?.role === 'geotech_staff' && !user?.is_approved) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-8 text-center">
+          <p className="text-lg font-semibold text-yellow-700">관리자 승인 대기 중입니다</p>
+          <p className="mt-2 text-sm text-yellow-600">승인이 완료되면 이 페이지를 이용할 수 있습니다.</p>
+        </div>
+      </div>
+    );
+  }
+
   const stats = [
     { label: '전체 하드웨어 신청', value: totalCount, icon: '🖥️' },
     { label: '접수 대기', value: receivedCount, icon: '📥' },

@@ -13,6 +13,7 @@ interface UserRow {
   handler_level: HandlerLevelKey | null;
   region: string | null;
   is_active: boolean;
+  is_approved: boolean;
   created_at: string;
 }
 
@@ -45,7 +46,7 @@ export default function UserManagement() {
   const fetchUsers = useCallback(async () => {
     let query = supabase
       .from('profiles')
-      .select('id, name, email, role, handler_level, region, is_active, created_at')
+      .select('id, name, email, role, handler_level, region, is_active, is_approved, created_at')
       .neq('role', 'super_admin')
       .order('created_at', { ascending: false });
 
@@ -156,6 +157,7 @@ export default function UserManagement() {
                   <th className="px-4 py-3">레벨</th>
                   <th className="px-4 py-3">지역</th>
                   <th className="px-4 py-3 text-center">상태</th>
+                  <th className="px-4 py-3 text-center">승인</th>
                   <th className="px-4 py-3">가입일</th>
                 </tr>
               </thead>
@@ -223,6 +225,26 @@ export default function UserManagement() {
                         />
                         {u.is_active ? '활성' : '비활성'}
                       </button>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {(u.role === 'payn_staff' || u.role === 'geotech_staff') ? (
+                        <button
+                          onClick={() => updateUser(u.id, { is_approved: !u.is_approved } as Partial<UserRow>)}
+                          disabled={updating === u.id}
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                            u.is_approved
+                              ? 'bg-[#e6f9ef] text-[#03C75A] hover:bg-[#d0f4e0]'
+                              : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-1.5 w-1.5 rounded-full ${u.is_approved ? 'bg-[#03C75A]' : 'bg-yellow-500'}`}
+                          />
+                          {u.is_approved ? '승인' : '미승인'}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-gray-500">
                       {formatDate(u.created_at)}
@@ -296,6 +318,26 @@ export default function UserManagement() {
                     </select>
                   )}
                 </div>
+
+                {/* 승인 상태 (PayN/지오테크넷만) */}
+                {(u.role === 'payn_staff' || u.role === 'geotech_staff') && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => updateUser(u.id, { is_approved: !u.is_approved } as Partial<UserRow>)}
+                      disabled={updating === u.id}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        u.is_approved
+                          ? 'bg-[#e6f9ef] text-[#03C75A]'
+                          : 'bg-yellow-50 text-yellow-600'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-1.5 w-1.5 rounded-full ${u.is_approved ? 'bg-[#03C75A]' : 'bg-yellow-500'}`}
+                      />
+                      {u.is_approved ? '승인됨' : '미승인 (클릭하여 승인)'}
+                    </button>
+                  </div>
+                )}
 
                 {/* 하단 정보 */}
                 <div className="mt-2 flex justify-between text-xs text-gray-500">
