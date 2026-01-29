@@ -73,9 +73,9 @@ export default function Sidebar() {
   const basePath = USER_ROLES[role].dashboard;
 
   return (
-    <aside className="flex w-60 flex-col border-r border-gray-200 bg-navy text-white">
-      <div className="border-b border-navy-dark px-4 py-5">
-        <p className="text-xs uppercase tracking-wider text-mint">메뉴</p>
+    <aside className="flex w-60 flex-col border-r border-gray-200 bg-sidebar text-white">
+      <div className="border-b border-sidebar-dark px-4 py-5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-naver">메뉴</p>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {items.map((item) => (
@@ -84,10 +84,10 @@ export default function Sidebar() {
             to={item.path}
             end={item.path === basePath}
             className={({ isActive }) =>
-              `block rounded-lg px-4 py-2.5 text-sm transition-colors ${
+              `block rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${
                 isActive
-                  ? 'bg-mint text-white font-medium'
-                  : 'text-gray-300 hover:bg-white/10'
+                  ? 'bg-naver text-white font-medium shadow-md'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
               }`
             }
           >
@@ -96,16 +96,16 @@ export default function Sidebar() {
         ))}
 
         <div className="my-3 border-t border-white/10" />
-        <p className="px-4 pb-1 text-xs uppercase tracking-wider text-gray-500">공통</p>
+        <p className="px-4 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">공통</p>
         {COMMON_MENU.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `block rounded-lg px-4 py-2.5 text-sm transition-colors ${
+              `block rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${
                 isActive
-                  ? 'bg-mint text-white font-medium'
-                  : 'text-gray-300 hover:bg-white/10'
+                  ? 'bg-naver text-white font-medium shadow-md'
+                  : 'text-gray-400 hover:bg-white/10 hover:text-white'
               }`
             }
           >

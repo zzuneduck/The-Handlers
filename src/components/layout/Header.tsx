@@ -6,19 +6,21 @@ export default function Header() {
   const { user, logout } = useAuthStore();
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-bold text-navy">The Handlers</h1>
+        <h1 className="text-xl font-bold text-text">
+          <span className="text-naver">The</span> Handlers
+        </h1>
       </div>
       {user && (
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-sm font-medium text-gray-900">{user.name}</p>
-            <p className="text-xs text-mint">{USER_ROLES[user.role as Role].label}</p>
+            <p className="text-sm font-medium text-text">{user.name}</p>
+            <p className="text-xs font-medium text-naver">{USER_ROLES[user.role as Role].label}</p>
           </div>
           <button
             onClick={logout}
-            className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-200 transition-colors"
+            className="rounded-xl bg-gray-100 px-4 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-200"
           >
             로그아웃
           </button>
