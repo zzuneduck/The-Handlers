@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { CONSULTATION_STATUS } from '../../constants/consultationStatus';
 import type { ConsultationStatusKey } from '../../constants/consultationStatus';
 import { BUSINESS_TYPES } from '../../constants/businessTypes';
@@ -53,7 +54,7 @@ export default function ConsultationDetailModal({ consultation, isOpen, onClose 
 
   const c = consultation;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-12"
       onClick={onClose}
@@ -153,7 +154,8 @@ export default function ConsultationDetailModal({ consultation, isOpen, onClose 
           닫기
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

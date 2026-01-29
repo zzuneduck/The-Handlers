@@ -13,6 +13,8 @@ async function main() {
     .select('is_approved')
     .limit(1);
 
+  console.log('테스트 결과:', JSON.stringify({ data: testRow, error: testError }));
+
   if (testError && testError.message.includes('is_approved')) {
     console.log('❌ is_approved 컬럼이 아직 없습니다.');
     console.log('Supabase 대시보드 SQL Editor에서 아래 SQL을 실행해주세요:\n');

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import { REGIONS } from '../../constants/regions';
 import { BUSINESS_TYPES } from '../../constants/businessTypes';
@@ -214,7 +215,7 @@ export default function StoreSearch() {
       )}
 
       {/* 상세 모달 */}
-      {selected && (
+      {selected && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={() => setSelected(null)}
@@ -287,7 +288,8 @@ export default function StoreSearch() {
               닫기
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../hooks/useToast';
@@ -301,7 +302,7 @@ export default function NoticeManagement() {
       )}
 
       {/* ── 모달 ── */}
-      {showModal && (
+      {showModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="text-lg font-bold text-gray-900">
@@ -367,7 +368,8 @@ export default function NoticeManagement() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

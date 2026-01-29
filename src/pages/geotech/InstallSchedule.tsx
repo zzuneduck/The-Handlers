@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import ConsultationDetailModal from '../../components/consultation/ConsultationDetailModal';
@@ -335,7 +336,7 @@ export default function InstallSchedule() {
       </div>
 
       {/* 날짜 클릭 모달 */}
-      {selectedDate && selectedItems && (
+      {selectedDate && selectedItems && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-12"
           onClick={() => setSelectedDate(null)}
@@ -409,7 +410,8 @@ export default function InstallSchedule() {
               닫기
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* 상세 모달 (재사용) */}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { SKILL_CATEGORIES, getSkillsByCategory } from '../../constants/skills';
 import type { SkillCategory } from '../../constants/skills';
 
@@ -41,7 +42,7 @@ export default function SkillSettingModal({ isOpen, onClose, handler, onSave }: 
     setSaving(false);
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* 배경 */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -122,6 +123,7 @@ export default function SkillSettingModal({ isOpen, onClose, handler, onSave }: 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
