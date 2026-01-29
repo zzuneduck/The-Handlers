@@ -5,6 +5,8 @@ import type { RoleKey } from '../../constants/roles';
 import { HANDLER_LEVELS } from '../../constants/levels';
 import type { HandlerLevelKey } from '../../constants/levels';
 import { useToast } from '../../hooks/useToast';
+import SkillSettingModal from '../../components/admin/SkillSettingModal';
+import type { SkillHandler } from '../../components/admin/SkillSettingModal';
 
 interface UserRow {
   id: string;
@@ -15,6 +17,9 @@ interface UserRow {
   region: string | null;
   is_active: boolean;
   is_approved: boolean;
+  skill_marketing: string | null;
+  skill_sales: string | null;
+  skill_specialty: string | null;
   created_at: string;
 }
 
@@ -44,11 +49,12 @@ export default function UserManagement() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
+  const [skillTarget, setSkillTarget] = useState<SkillHandler | null>(null);
 
   const fetchUsers = useCallback(async () => {
     let query = supabase
       .from('profiles')
-      .select('id, name, email, role, handler_level, region, is_active, is_approved, created_at')
+      .select('id, name, email, role, handler_level, region, is_active, is_approved, skill_marketing, skill_sales, skill_specialty, created_at')
       .neq('role', 'super_admin')
       .order('created_at', { ascending: false });
 
@@ -95,6 +101,24 @@ export default function UserManagement() {
       updates.handler_level = 1;
     }
     updateUser(user.id, updates);
+  };
+
+  const handleSkillSave = async (skills: { skill_marketing: string | null; skill_sales: string | null; skill_specialty: string | null }) => {
+    if (!skillTarget) return;
+    const { error } = await supabase
+      .from('profiles')
+      .update(skills)
+      .eq('id', skillTarget.id);
+
+    if (error) {
+      toast.error(`능력치 저장 실패: ${error.message}`);
+    } else {
+      toast.success(`${skillTarget.name}님의 능력치가 저장되었습니다.`);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === skillTarget.id ? { ...u, ...skills } : u)),
+      );
+      setSkillTarget(null);
+    }
   };
 
   if (loading) {
@@ -160,6 +184,7 @@ export default function UserManagement() {
                   <th className="px-4 py-3">지역</th>
                   <th className="px-4 py-3 text-center">상태</th>
                   <th className="px-4 py-3 text-center">승인</th>
+                  <th className="px-4 py-3 text-center">능력치</th>
                   <th className="px-4 py-3">가입일</th>
                 </tr>
               </thead>
@@ -248,6 +273,24 @@ export default function UserManagement() {
                         <span className="text-xs text-gray-400">-</span>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      {u.role === 'handler' ? (
+                        <button
+                          onClick={() => setSkillTarget({
+                            id: u.id,
+                            name: u.name,
+                            skill_marketing: u.skill_marketing,
+                            skill_sales: u.skill_sales,
+                            skill_specialty: u.skill_specialty,
+                          })}
+                          className="rounded-lg border border-[#03C75A] px-2.5 py-1 text-xs font-medium text-[#03C75A] transition-colors hover:bg-[#e6f9ef]"
+                        >
+                          설정
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-400">-</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-500">
                       {formatDate(u.created_at)}
                     </td>
@@ -302,22 +345,37 @@ export default function UserManagement() {
                   </select>
 
                   {u.role === 'handler' && (
-                    <select
-                      value={u.handler_level ?? 1}
-                      onChange={(e) =>
-                        updateUser(u.id, {
-                          handler_level: Number(e.target.value) as HandlerLevelKey,
-                        })
-                      }
-                      disabled={updating === u.id}
-                      className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs focus:border-[#03C75A] focus:outline-none"
-                    >
-                      {LEVEL_OPTIONS.map((lv) => (
-                        <option key={lv} value={lv}>
-                          {HANDLER_LEVELS[lv].icon} Lv.{lv}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        value={u.handler_level ?? 1}
+                        onChange={(e) =>
+                          updateUser(u.id, {
+                            handler_level: Number(e.target.value) as HandlerLevelKey,
+                          })
+                        }
+                        disabled={updating === u.id}
+                        className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs focus:border-[#03C75A] focus:outline-none"
+                      >
+                        {LEVEL_OPTIONS.map((lv) => (
+                          <option key={lv} value={lv}>
+                            {HANDLER_LEVELS[lv].icon} Lv.{lv}
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        onClick={() => setSkillTarget({
+                          id: u.id,
+                          name: u.name,
+                          skill_marketing: u.skill_marketing,
+                          skill_sales: u.skill_sales,
+                          skill_specialty: u.skill_specialty,
+                        })}
+                        className="rounded-lg border border-[#03C75A] px-2 py-1 text-xs font-medium text-[#03C75A] transition-colors hover:bg-[#e6f9ef]"
+                      >
+                        능력치
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -350,6 +408,16 @@ export default function UserManagement() {
             ))}
           </div>
         </>
+      )}
+
+      {/* 능력치 설정 모달 */}
+      {skillTarget && (
+        <SkillSettingModal
+          isOpen={!!skillTarget}
+          onClose={() => setSkillTarget(null)}
+          handler={skillTarget}
+          onSave={handleSkillSave}
+        />
       )}
     </div>
   );
