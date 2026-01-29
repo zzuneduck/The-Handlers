@@ -14,7 +14,10 @@ interface MenuGroup {
 
 const MENU_GROUPS: Record<Role, MenuGroup[]> = {
   handler: [
-    { group: null, items: [{ label: '대시보드', path: '/handler' }] },
+    { group: null, items: [
+      { label: '영업 체크리스트', path: '/handler/checklist' },
+      { label: '대시보드', path: '/handler' },
+    ]},
     { group: '상담', items: [
       { label: '상담 신청', path: '/handler/consultation/new' },
       { label: '내 상담', path: '/handler/consultations' },

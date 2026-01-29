@@ -38,6 +38,7 @@ import MySales from './pages/handler/MySales';
 import StoreSearch from './pages/handler/StoreSearch';
 import WriteSuccessStory from './pages/handler/WriteSuccessStory';
 import HandlerStatistics from './pages/handler/Statistics';
+import SalesChecklist from './pages/handler/SalesChecklist';
 import MyPoints from './pages/handler/MyPoints';
 
 // PayN
@@ -128,6 +129,7 @@ function AppRoutes() {
           {/* Handler */}
           <Route element={<RoleRoute allowedRoles={['super_admin', 'sub_admin', 'handler']} />}>
             <Route path="/handler" element={<HandlerDashboard />} />
+            <Route path="/handler/checklist" element={<SalesChecklist />} />
             <Route path="/handler/consultation/new" element={<ConsultationForm />} />
             <Route path="/handler/consultations" element={<MyConsultations />} />
             <Route path="/handler/consultations/:id" element={<ConsultationStatus />} />
