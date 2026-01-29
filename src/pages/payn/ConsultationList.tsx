@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import ConsultationDetailModal from '../../components/consultation/ConsultationDetailModal';
+import type { ConsultationDetail } from '../../components/consultation/ConsultationDetailModal';
 import { CONSULTATION_STATUS } from '../../constants/consultationStatus';
 import type { ConsultationStatusKey } from '../../constants/consultationStatus';
 import { REGIONS } from '../../constants/regions';
@@ -52,6 +54,20 @@ export default function ConsultationList() {
   const [regionFilter, setRegionFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
+  const [selected, setSelected] = useState<ConsultationDetail | null>(null);
+
+  const handleRowClick = async (id: string) => {
+    const { data, error } = await supabase
+      .from('consultations')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) {
+      console.error('[ConsultationDetail]', error.message);
+      return;
+    }
+    setSelected(data as ConsultationDetail);
+  };
 
   const fetchRows = useCallback(async () => {
     let query = supabase
@@ -234,7 +250,7 @@ export default function ConsultationList() {
                 {filtered.map((row) => (
                   <tr
                     key={row.id}
-                    onClick={() => console.log('상세보기:', row.id)}
+                    onClick={() => handleRowClick(row.id)}
                     className={`cursor-pointer transition-colors ${
                       updating === row.id ? 'opacity-50' : 'hover:bg-gray-50'
                     }`}
@@ -287,7 +303,7 @@ export default function ConsultationList() {
             {filtered.map((row) => (
               <div
                 key={row.id}
-                onClick={() => console.log('상세보기:', row.id)}
+                onClick={() => handleRowClick(row.id)}
                 className={`cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-sm active:bg-gray-50 ${
                   updating === row.id ? 'opacity-50' : ''
                 }`}
@@ -333,6 +349,12 @@ export default function ConsultationList() {
           </div>
         </>
       )}
+
+      <ConsultationDetailModal
+        consultation={selected}
+        isOpen={!!selected}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }

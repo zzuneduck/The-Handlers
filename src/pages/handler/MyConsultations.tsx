@@ -5,6 +5,8 @@ import { supabase } from '../../lib/supabase';
 import { CONSULTATION_STATUS } from '../../constants/consultationStatus';
 import type { ConsultationStatusKey } from '../../constants/consultationStatus';
 import { BUSINESS_TYPES } from '../../constants/businessTypes';
+import ConsultationDetailModal from '../../components/consultation/ConsultationDetailModal';
+import type { ConsultationDetail } from '../../components/consultation/ConsultationDetailModal';
 
 interface ConsultationRow {
   id: string;
@@ -37,6 +39,20 @@ export default function MyConsultations() {
   const { user } = useAuthStore();
   const [rows, setRows] = useState<ConsultationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<ConsultationDetail | null>(null);
+
+  const handleRowClick = async (id: string) => {
+    const { data, error } = await supabase
+      .from('consultations')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) {
+      console.error('[ConsultationDetail]', error.message);
+      return;
+    }
+    setSelected(data as ConsultationDetail);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -110,7 +126,7 @@ export default function MyConsultations() {
             {rows.map((row) => (
               <tr
                 key={row.id}
-                onClick={() => console.log('상세보기:', row.id)}
+                onClick={() => handleRowClick(row.id)}
                 className="cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <td className="px-4 py-3 font-medium text-gray-900">
@@ -146,7 +162,7 @@ export default function MyConsultations() {
         {rows.map((row) => (
           <div
             key={row.id}
-            onClick={() => console.log('상세보기:', row.id)}
+            onClick={() => handleRowClick(row.id)}
             className="cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-sm active:bg-gray-50"
           >
             <div className="flex items-start justify-between">
@@ -167,6 +183,12 @@ export default function MyConsultations() {
           </div>
         ))}
       </div>
+
+      <ConsultationDetailModal
+        consultation={selected}
+        isOpen={!!selected}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }
