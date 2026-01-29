@@ -13,9 +13,23 @@ interface BoardRow {
   created_at: string;
 }
 
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  user_name: string;
+  content: string;
+  created_at: string;
+}
+
 function formatDate(iso: string) {
   const d = new Date(iso);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatTime(iso: string) {
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 export default function FreeBoard() {
@@ -30,6 +44,10 @@ export default function FreeBoard() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
+  const [comments, setComments] = useState<Record<number, Comment[]>>({});
+  const [commentText, setCommentText] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   const fetchRows = useCallback(async () => {
     const { data, error } = await supabase
@@ -67,6 +85,22 @@ export default function FreeBoard() {
       }
     }
 
+    // 댓글 수 조회
+    if (posts.length > 0) {
+      const { data: commentData } = await supabase
+        .from('comments')
+        .select('post_id');
+
+      if (commentData) {
+        const counts: Record<number, number> = {};
+        commentData.forEach((c: { post_id: string }) => {
+          const pid = Number(c.post_id);
+          counts[pid] = (counts[pid] ?? 0) + 1;
+        });
+        setCommentCounts(counts);
+      }
+    }
+
     setLoading(false);
   }, []);
 
@@ -74,19 +108,36 @@ export default function FreeBoard() {
     fetchRows();
   }, [fetchRows]);
 
+  const fetchComments = async (postId: number) => {
+    const { data } = await supabase
+      .from('comments')
+      .select('id, post_id, user_id, user_name, content, created_at')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    if (data) {
+      setComments((prev) => ({ ...prev, [postId]: data as Comment[] }));
+    }
+  };
+
   const handleToggle = async (row: BoardRow) => {
     if (openId === row.id) {
       setOpenId(null);
+      setCommentText('');
       return;
     }
 
     setOpenId(row.id);
+    setCommentText('');
 
-    // 조회수 증가
-    await supabase
-      .from('free_board')
-      .update({ views: row.views + 1 })
-      .eq('id', row.id);
+    // 조회수 증가 + 댓글 로드
+    await Promise.all([
+      supabase
+        .from('free_board')
+        .update({ views: row.views + 1 })
+        .eq('id', row.id),
+      fetchComments(row.id),
+    ]);
 
     setRows((prev) =>
       prev.map((r) => (r.id === row.id ? { ...r, views: r.views + 1 } : r)),
@@ -123,6 +174,39 @@ export default function FreeBoard() {
     } else {
       setRows((prev) => prev.filter((r) => r.id !== id));
       if (openId === id) setOpenId(null);
+    }
+  };
+
+  const handleCommentSubmit = async (postId: number) => {
+    if (!user || !commentText.trim()) return;
+    setCommentSubmitting(true);
+
+    const { error } = await supabase.from('comments').insert({
+      post_id: postId,
+      user_id: user.id,
+      user_name: user.name,
+      content: commentText.trim(),
+    });
+
+    if (error) {
+      toast.error(`댓글 등록 실패: ${error.message}`);
+    } else {
+      setCommentText('');
+      await fetchComments(postId);
+      setCommentCounts((prev) => ({ ...prev, [postId]: (prev[postId] ?? 0) + 1 }));
+    }
+    setCommentSubmitting(false);
+  };
+
+  const handleCommentDelete = async (commentId: string, postId: number) => {
+    if (!confirm('댓글을 삭제하시겠습니까?')) return;
+
+    const { error } = await supabase.from('comments').delete().eq('id', commentId);
+    if (error) {
+      toast.error(`삭제 실패: ${error.message}`);
+    } else {
+      await fetchComments(postId);
+      setCommentCounts((prev) => ({ ...prev, [postId]: Math.max((prev[postId] ?? 1) - 1, 0) }));
     }
   };
 
@@ -224,6 +308,9 @@ CREATE POLICY "Anyone can update views"
                 <div className="hidden w-full items-center md:flex">
                   <div className="flex-1 px-4 py-3">
                     <span className="font-medium text-gray-900">{row.title}</span>
+                    {(commentCounts[row.id] ?? 0) > 0 && (
+                      <span className="ml-2 text-xs text-gray-400">💬 {commentCounts[row.id]}</span>
+                    )}
                   </div>
                   <div className="w-28 px-4 py-3 text-sm text-gray-600">
                     {authorMap[row.user_id] ?? '알 수 없음'}
@@ -238,7 +325,12 @@ CREATE POLICY "Anyone can update views"
 
                 {/* 모바일 */}
                 <div className="flex w-full flex-col px-4 py-3 md:hidden">
-                  <span className="font-medium text-gray-900">{row.title}</span>
+                  <span className="font-medium text-gray-900">
+                    {row.title}
+                    {(commentCounts[row.id] ?? 0) > 0 && (
+                      <span className="ml-2 text-xs text-gray-400">💬 {commentCounts[row.id]}</span>
+                    )}
+                  </span>
                   <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
                     <span>{authorMap[row.user_id] ?? '알 수 없음'}</span>
                     <span>{formatDate(row.created_at)}</span>
@@ -281,6 +373,65 @@ CREATE POLICY "Anyone can update views"
                       </button>
                     </div>
                   )}
+
+                  {/* 댓글 섹션 */}
+                  <div className="mt-4 rounded-lg bg-gray-100 p-4">
+                    <p className="mb-3 text-xs font-semibold text-gray-500">
+                      댓글 {(comments[row.id] ?? []).length}개
+                    </p>
+
+                    {/* 댓글 목록 */}
+                    {(comments[row.id] ?? []).length > 0 && (
+                      <div className="mb-3 space-y-2">
+                        {(comments[row.id] ?? []).map((c) => (
+                          <div key={c.id} className="rounded-lg bg-white px-3 py-2.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-gray-800">{c.user_name}</span>
+                                <span className="text-xs text-gray-400">{formatTime(c.created_at)}</span>
+                              </div>
+                              {user && user.id === c.user_id && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCommentDelete(c.id, row.id);
+                                  }}
+                                  className="text-xs text-red-400 transition-colors hover:text-red-600"
+                                >
+                                  삭제
+                                </button>
+                              )}
+                            </div>
+                            <p className="mt-1 text-sm text-gray-700">{c.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 댓글 입력 */}
+                    {user && (
+                      <div className="flex gap-2">
+                        <textarea
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          rows={2}
+                          placeholder="댓글을 입력하세요"
+                          className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-[#03C75A] focus:outline-none focus:ring-2 focus:ring-[#03C75A]/20"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCommentSubmit(row.id);
+                          }}
+                          disabled={commentSubmitting || !commentText.trim()}
+                          className="self-end rounded-lg bg-[#03C75A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#02b350] disabled:opacity-50"
+                        >
+                          {commentSubmitting ? '...' : '등록'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
