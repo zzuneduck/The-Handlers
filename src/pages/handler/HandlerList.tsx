@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { HANDLER_LEVELS } from '../../constants/levels';
 import type { HandlerLevelKey } from '../../constants/levels';
+import { HANDLER_SKILLS } from '../../constants/skills';
+import type { SkillKey } from '../../constants/skills';
 
 interface HandlerRow {
   id: string;
@@ -9,6 +11,9 @@ interface HandlerRow {
   email: string;
   handler_level: HandlerLevelKey | null;
   region: string | null;
+  skill_marketing: string | null;
+  skill_sales: string | null;
+  skill_specialty: string | null;
   created_at: string;
 }
 
@@ -25,6 +30,31 @@ function levelLabel(lv: HandlerLevelKey | null) {
   return { icon: info.icon, text: `Lv.${lv} ${info.name}` };
 }
 
+function SkillBadge({ skillKey }: { skillKey: string | null }) {
+  if (!skillKey) return null;
+  const skill = HANDLER_SKILLS[skillKey as SkillKey];
+  if (!skill) return null;
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+      {skill.icon} {skill.name}
+    </span>
+  );
+}
+
+function SkillBadges({ row }: { row: HandlerRow }) {
+  const skills = [row.skill_marketing, row.skill_sales, row.skill_specialty].filter(Boolean);
+  if (skills.length === 0) {
+    return <span className="text-xs text-gray-400">-</span>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {skills.map((sk) => (
+        <SkillBadge key={sk} skillKey={sk} />
+      ))}
+    </div>
+  );
+}
+
 export default function HandlerList() {
   const [rows, setRows] = useState<HandlerRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +65,7 @@ export default function HandlerList() {
   const fetchRows = useCallback(async () => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, name, email, handler_level, region, created_at')
+      .select('id, name, email, handler_level, region, skill_marketing, skill_sales, skill_specialty, created_at')
       .eq('role', 'handler')
       .order('created_at', { ascending: false });
 
@@ -150,6 +180,7 @@ export default function HandlerList() {
                 <tr>
                   <th className="px-4 py-3">이름</th>
                   <th className="px-4 py-3">레벨</th>
+                  <th className="px-4 py-3">능력치</th>
                   <th className="px-4 py-3">지역</th>
                   <th className="px-4 py-3">이메일</th>
                   <th className="px-4 py-3">가입일</th>
@@ -165,6 +196,9 @@ export default function HandlerList() {
                         <span className="inline-flex items-center gap-1 rounded-full bg-[#e6f9ef] px-2.5 py-0.5 text-xs font-medium text-[#03C75A]">
                           {lv.icon} {lv.text}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <SkillBadges row={r} />
                       </td>
                       <td className="px-4 py-3 text-gray-600">{r.region ?? '-'}</td>
                       <td className="px-4 py-3 text-gray-600">{r.email}</td>
@@ -190,6 +224,9 @@ export default function HandlerList() {
                     <span className="inline-flex items-center gap-1 rounded-full bg-[#e6f9ef] px-2.5 py-0.5 text-xs font-medium text-[#03C75A]">
                       {lv.icon} {lv.text}
                     </span>
+                  </div>
+                  <div className="mt-2">
+                    <SkillBadges row={r} />
                   </div>
                   <div className="mt-2 text-sm text-gray-500">{r.email}</div>
                   <div className="mt-1 flex justify-between text-xs text-gray-400">

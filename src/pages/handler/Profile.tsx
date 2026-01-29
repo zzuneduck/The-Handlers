@@ -6,6 +6,9 @@ import { USER_ROLES } from '../../constants/roles';
 import { HANDLER_LEVELS } from '../../constants/levels';
 import type { HandlerLevelKey } from '../../constants/levels';
 import type { Role } from '../../types';
+import { SKILL_CATEGORIES, getSkillsByCategory } from '../../constants/skills';
+import type { SkillCategory } from '../../constants/skills';
+import { useToast } from '../../hooks/useToast';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -14,6 +17,7 @@ function formatDate(iso: string) {
 
 export default function Profile() {
   const { user } = useAuthStore();
+  const toast = useToast();
 
   const [name, setName] = useState(user?.name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
@@ -27,11 +31,23 @@ export default function Profile() {
   const [changingPw, setChangingPw] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // 스킬 상태
+  const [skillMarketing, setSkillMarketing] = useState<string>(user?.skill_marketing ?? '');
+  const [skillSales, setSkillSales] = useState<string>(user?.skill_sales ?? '');
+  const [skillSpecialty, setSkillSpecialty] = useState<string>(user?.skill_specialty ?? '');
+  const [savingSkills, setSavingSkills] = useState(false);
+
   if (!user) return null;
 
   const roleLabel = USER_ROLES[user.role as Role]?.label ?? user.role;
   const lv = user.handler_level as HandlerLevelKey | null;
   const levelInfo = lv ? HANDLER_LEVELS[lv] : null;
+
+  const skillState: Record<SkillCategory, { value: string; set: (v: string) => void }> = {
+    marketing: { value: skillMarketing, set: setSkillMarketing },
+    sales: { value: skillSales, set: setSkillSales },
+    specialty: { value: skillSpecialty, set: setSkillSpecialty },
+  };
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +69,26 @@ export default function Profile() {
       setProfileMsg({ type: 'success', text: '프로필이 저장되었습니다.' });
     }
     setSaving(false);
+  };
+
+  const handleSkillsSave = async () => {
+    setSavingSkills(true);
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        skill_marketing: skillMarketing || null,
+        skill_sales: skillSales || null,
+        skill_specialty: skillSpecialty || null,
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      toast.error(`스킬 저장 실패: ${error.message}`);
+    } else {
+      toast.success('능력치가 저장되었습니다.');
+    }
+    setSavingSkills(false);
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -183,6 +219,64 @@ export default function Profile() {
           {saving ? '저장 중...' : '프로필 저장'}
         </button>
       </form>
+
+      {/* 능력치(스킬) 설정 */}
+      <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500">능력치 설정</h3>
+          <p className="mt-1 text-xs text-gray-400">카테고리별 대표 능력 1개를 선택하세요.</p>
+        </div>
+
+        {(Object.entries(SKILL_CATEGORIES) as [SkillCategory, { name: string; description: string }][]).map(
+          ([category, catInfo]) => {
+            const skills = getSkillsByCategory(category);
+            const { value, set } = skillState[category];
+
+            return (
+              <div key={category}>
+                <div className="mb-2 flex items-baseline gap-2">
+                  <p className="text-sm font-medium text-gray-900">{catInfo.name}</p>
+                  <span className="text-xs text-gray-400">{catInfo.description}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {skills.map((skill) => {
+                    const selected = value === skill.key;
+                    return (
+                      <button
+                        key={skill.key}
+                        type="button"
+                        onClick={() => set(selected ? '' : skill.key)}
+                        className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-sm transition-all ${
+                          selected
+                            ? 'border-[#03C75A] bg-[#e6f9ef] text-gray-900'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="text-base">{skill.icon}</span>
+                        <span className="flex-1 truncate">{skill.name}</span>
+                        {selected && (
+                          <svg className="h-4 w-4 shrink-0 text-[#03C75A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          },
+        )}
+
+        <button
+          type="button"
+          onClick={handleSkillsSave}
+          disabled={savingSkills}
+          className="w-full rounded-xl bg-[#03C75A] py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-[#02B150] hover:shadow-lg disabled:opacity-50"
+        >
+          {savingSkills ? '저장 중...' : '능력치 저장'}
+        </button>
+      </div>
 
       {/* 비밀번호 변경 */}
       {pwMsg && (

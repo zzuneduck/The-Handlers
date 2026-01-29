@@ -14,4 +14,7 @@ export interface Profile {
   created_at: string;
   is_active: boolean;
   is_approved: boolean;
+  skill_marketing: string | null;
+  skill_sales: string | null;
+  skill_specialty: string | null;
 }
