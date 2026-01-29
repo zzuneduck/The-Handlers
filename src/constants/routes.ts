@@ -1,0 +1,22 @@
+export const ROUTES = {
+  LOGIN: '/login',
+  REGISTER: '/register',
+  ADMIN: '/admin',
+  PAYN: '/payn',
+  GEOTECH: '/geotech',
+  HANDLER: '/handler',
+  COMMON: {
+    LIVE_DASHBOARD: '/live',
+    RANKING: '/ranking',
+    HANDLER_MAP: '/handler-map',
+    STORE_MAP: '/store-map',
+    NOTICE: '/notice',
+    QNA: '/qna',
+    SUCCESS_STORIES: '/success-stories',
+    PAYN_TIPS: '/payn-tips',
+    FREE_BOARD: '/free-board',
+    USEFUL_LINKS: '/useful-links',
+    SALES_TEMPLATES: '/sales-templates',
+    PAYN_MANUAL: '/payn-manual',
+  },
+} as const;
