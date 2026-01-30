@@ -165,10 +165,14 @@ function AppRoutes() {
             <Route path="/geotech/ranking" element={<GeotechRanking />} />
           </Route>
 
+          {/* Staff only (핸들러 제외) */}
+          <Route element={<RoleRoute allowedRoles={['super_admin', 'sub_admin', 'payn_staff', 'geotech_staff']} />}>
+            <Route path="/handler-map" element={<HandlerMap />} />
+          </Route>
+
           {/* Common (all authenticated users) */}
           <Route path="/live" element={<LiveDashboard />} />
           <Route path="/ranking" element={<Ranking />} />
-          <Route path="/handler-map" element={<HandlerMap />} />
           <Route path="/store-map" element={<StoreMap />} />
           <Route path="/notice" element={<Notice />} />
           <Route path="/qna" element={<QnA />} />
