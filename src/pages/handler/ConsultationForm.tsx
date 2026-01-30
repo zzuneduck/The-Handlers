@@ -7,6 +7,7 @@ import { BUSINESS_TYPES } from '../../constants/businessTypes';
 import { STORE_SIZES } from '../../constants/storeSize';
 import { HARDWARE_TYPES } from '../../constants/hardwareTypes';
 import ImageUpload from '../../components/common/ImageUpload';
+import AddressSearch from '../../components/map/AddressSearch';
 import { logActivity } from '../../lib/activityLogger';
 import { useToast } from '../../hooks/useToast';
 import { RECOMMENDATIONS } from '../../constants/triage';
@@ -37,6 +38,11 @@ export default function ConsultationForm() {
   const [subRegion, setSubRegion] = useState('');
   const [businessType, setBusinessType] = useState('');
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+
+  // 주소
+  const [storeAddress, setStoreAddress] = useState('');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
 
   // 매장 정보 (선택)
   const [bizLicenseUrl, setBizLicenseUrl] = useState('');
@@ -80,7 +86,9 @@ export default function ConsultationForm() {
         owner_phone: phone,
         region,
         sub_region: subRegion,
-        address: `${region} ${subRegion}`,
+        address: storeAddress || `${region} ${subRegion}`,
+        lat: lat ?? null,
+        lng: lng ?? null,
         business_type: businessType,
         privacy_agreed: privacyAgreed,
         biz_license_url: bizLicenseUrl || null,
@@ -255,6 +263,19 @@ export default function ConsultationForm() {
                   className={inputClass}
                 />
               </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>매장 주소</label>
+              <AddressSearch
+                value={storeAddress}
+                onChange={(addr, la, ln) => {
+                  setStoreAddress(addr);
+                  setLat(la);
+                  setLng(ln);
+                }}
+                placeholder="매장 주소를 검색하세요"
+              />
             </div>
 
             <div>

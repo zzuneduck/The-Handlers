@@ -2,11 +2,16 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { USER_ROLES } from '../../constants/roles';
+import { REGIONS } from '../../constants/regions';
+import { SKILL_CATEGORIES, getSkillsByCategory } from '../../constants/skills';
+import type { SkillCategory, SkillKey } from '../../constants/skills';
 import type { Role } from '../../types';
 
 const AVAILABLE_ROLES = Object.entries(USER_ROLES)
   .filter(([key]) => key !== 'super_admin')
   .map(([value, { label }]) => ({ value: value as Role, label }));
+
+const CATEGORIES: SkillCategory[] = ['marketing', 'sales', 'specialty'];
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -17,11 +22,31 @@ export default function RegisterPage() {
   const { signUp, error, clearError } = useAuthStore();
   const navigate = useNavigate();
 
+  // 핸들러 전용 필드
+  const [region, setRegion] = useState('');
+  const [skillMarketing, setSkillMarketing] = useState<SkillKey | ''>('');
+  const [skillSales, setSkillSales] = useState<SkillKey | ''>('');
+  const [skillSpecialty, setSkillSpecialty] = useState<SkillKey | ''>('');
+
+  const skillState: Record<SkillCategory, { value: SkillKey | ''; set: (v: SkillKey | '') => void }> = {
+    marketing: { value: skillMarketing, set: setSkillMarketing },
+    sales: { value: skillSales, set: setSkillSales },
+    specialty: { value: skillSpecialty, set: setSkillSpecialty },
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { redirectPath } = await signUp(email, password, name, role);
+      const extra: Record<string, unknown> = {};
+      if (role === 'handler') {
+        if (region) extra.region = region;
+        if (skillMarketing) extra.skill_marketing = skillMarketing;
+        if (skillSales) extra.skill_sales = skillSales;
+        if (skillSpecialty) extra.skill_specialty = skillSpecialty;
+      }
+
+      const { redirectPath } = await signUp(email, password, name, role, extra);
       navigate(redirectPath, { replace: true });
     } catch {
       // error is set in store
@@ -30,8 +55,10 @@ export default function RegisterPage() {
     }
   };
 
+  const isHandler = role === 'handler';
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 py-8">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-text">
@@ -106,6 +133,70 @@ export default function RegisterPage() {
               ))}
             </select>
           </div>
+
+          {/* 핸들러 전용 필드 */}
+          {isHandler && (
+            <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              {/* 활동 지역 */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  활동 지역 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-text focus:border-naver focus:outline-none focus:ring-2 focus:ring-naver/20"
+                >
+                  <option value="">시/도 선택</option>
+                  {REGIONS.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 능력치 설정 */}
+              <div>
+                <p className="mb-3 text-sm font-medium text-gray-700">
+                  능력치 설정 <span className="text-xs font-normal text-gray-400">(선택)</span>
+                </p>
+
+                {CATEGORIES.map((cat) => {
+                  const info = SKILL_CATEGORIES[cat];
+                  const skills = getSkillsByCategory(cat);
+                  const { value: selectedKey, set: setKey } = skillState[cat];
+
+                  return (
+                    <div key={cat} className="mb-4 last:mb-0">
+                      <p className="mb-2 text-xs font-semibold text-gray-600">
+                        {info.name} <span className="font-normal text-gray-400">- {info.description}</span>
+                      </p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {skills.map((s) => {
+                          const active = selectedKey === s.key;
+                          return (
+                            <button
+                              key={s.key}
+                              type="button"
+                              onClick={() => setKey(active ? '' : s.key)}
+                              className={`rounded-lg border px-2.5 py-2 text-left text-xs transition-colors ${
+                                active
+                                  ? 'border-[#03C75A] bg-[#e6f9ef] text-[#03C75A] font-medium'
+                                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                              }`}
+                            >
+                              {s.icon} {s.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={submitting}

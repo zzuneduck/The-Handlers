@@ -26,7 +26,7 @@ export function loadNaverMapScript(): Promise<void> {
 
   loadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=' + clientId;
+    script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=' + clientId + '&submodules=geocoder';
     script.async = true;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('네이버 지도 스크립트 로드 실패'));

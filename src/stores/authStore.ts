@@ -19,7 +19,8 @@ interface AuthState {
     email: string,
     password: string,
     name: string,
-    role: Role
+    role: Role,
+    extra?: Record<string, unknown>
   ) => Promise<SignInResult>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -105,7 +106,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     return { profile, redirectPath };
   },
 
-  signUp: async (email, password, name, role) => {
+  signUp: async (email, password, name, role, extra) => {
     set({ error: null });
 
     const { data, error } = await supabase.auth.signUp({ email, password });
@@ -127,6 +128,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       name,
       role,
       handler_level: role === 'handler' ? 1 : null,
+      ...(extra ?? {}),
     });
 
     if (profileError) {

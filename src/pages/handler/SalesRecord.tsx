@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import AddressSearch from '../../components/map/AddressSearch';
 
 function todayStr() {
   const d = new Date();
@@ -14,6 +15,9 @@ export default function SalesRecord() {
   const [consultationCount, setConsultationCount] = useState(0);
   const [contractCount, setContractCount] = useState(0);
   const [memo, setMemo] = useState('');
+  const [visitAddress, setVisitAddress] = useState('');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [existingId, setExistingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -41,12 +45,18 @@ export default function SalesRecord() {
           setConsultationCount(data.consultation_count);
           setContractCount(data.contract_count);
           setMemo(data.memo ?? '');
+          setVisitAddress(data.visit_address ?? '');
+          setLat(data.lat ?? null);
+          setLng(data.lng ?? null);
         } else {
           setExistingId(null);
           setVisitCount(0);
           setConsultationCount(0);
           setContractCount(0);
           setMemo('');
+          setVisitAddress('');
+          setLat(null);
+          setLng(null);
         }
         setLoading(false);
       });
@@ -65,6 +75,9 @@ export default function SalesRecord() {
       consultation_count: consultationCount,
       contract_count: contractCount,
       memo: memo || null,
+      visit_address: visitAddress || null,
+      lat: lat ?? null,
+      lng: lng ?? null,
     };
 
     let error;
@@ -119,6 +132,20 @@ export default function SalesRecord() {
             max={todayStr()}
             required
             className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-[#03C75A] focus:outline-none focus:ring-2 focus:ring-[#03C75A]/20"
+          />
+        </div>
+
+        {/* 방문 매장 주소 */}
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">방문 매장 주소</label>
+          <AddressSearch
+            value={visitAddress}
+            onChange={(addr, la, ln) => {
+              setVisitAddress(addr);
+              setLat(la);
+              setLng(ln);
+            }}
+            placeholder="방문 매장 주소를 검색하세요"
           />
         </div>
 
