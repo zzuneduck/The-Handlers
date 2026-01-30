@@ -91,6 +91,9 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Root redirect */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
       {/* Public */}
       <Route
         path="/login"
