@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import { REGIONS } from '../../constants/regions';
 import { BUSINESS_TYPES } from '../../constants/businessTypes';
+import NaverMap from '../../components/map/NaverMap';
+import type { MapMarker } from '../../components/map/NaverMap';
 
 interface StoreRow {
   id: string;
@@ -36,6 +38,7 @@ export default function StoreSearch() {
   const [regionFilter, setRegionFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selected, setSelected] = useState<StoreRow | null>(null);
+  const [showMap, setShowMap] = useState(true);
 
   const fetchRows = useCallback(async () => {
     setLoading(true);
@@ -121,6 +124,34 @@ export default function StoreSearch() {
             className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm focus:border-[#03C75A] focus:outline-none focus:ring-2 focus:ring-[#03C75A]/20 sm:w-64"
           />
         </div>
+      </div>
+
+      {/* 지도 토글 + 지도 */}
+      <div>
+        <button
+          onClick={() => setShowMap((v) => !v)}
+          className="mb-3 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+        >
+          {showMap ? '지도 숨기기' : '지도 보기'}
+        </button>
+
+        {showMap && (
+          <NaverMap
+            markers={rows
+              .filter((r): r is StoreRow & { lat: number; lng: number } => r.lat != null && r.lng != null)
+              .map((r): MapMarker => ({
+                lat: r.lat,
+                lng: r.lng,
+                title: r.name,
+                info: `${r.region}${r.sub_region ? ' ' + r.sub_region : ''} · ${r.is_contracted ? '계약완료' : '미계약'}`,
+              }))}
+            height="350px"
+            onMarkerClick={(mk) => {
+              const found = rows.find((r) => r.name === mk.title);
+              if (found) setSelected(found);
+            }}
+          />
+        )}
       </div>
 
       {loading ? (
@@ -281,9 +312,24 @@ export default function StoreSearch() {
               </div>
             </dl>
 
+            {selected.lat != null && selected.lng != null && (
+              <div className="mt-4">
+                <NaverMap
+                  lat={selected.lat}
+                  lng={selected.lng}
+                  markers={[{
+                    lat: selected.lat,
+                    lng: selected.lng,
+                    title: selected.name,
+                  }]}
+                  height="200px"
+                />
+              </div>
+            )}
+
             <button
               onClick={() => setSelected(null)}
-              className="mt-6 w-full rounded-xl bg-gray-100 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+              className="mt-4 w-full rounded-xl bg-gray-100 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
             >
               닫기
             </button>
