@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { loadNaverMapScript } from '../../lib/naverMap';
 
 export interface MapMarker {
   lat: number;
@@ -16,82 +17,105 @@ interface NaverMapProps {
   onMarkerClick?: (marker: MapMarker) => void;
 }
 
-import { loadNaverMapScript } from '../../lib/naverMap';
+// 스크립트 로드 상태를 전역으로 관리
+let scriptReady = !!window.naver?.maps;
+let scriptError = '';
+const waiters: (() => void)[] = [];
+
+if (!scriptReady && !scriptError) {
+  loadNaverMapScript()
+    .then(() => {
+      scriptReady = true;
+      waiters.forEach((fn) => fn());
+      waiters.length = 0;
+    })
+    .catch((e) => {
+      scriptError = e.message;
+      waiters.forEach((fn) => fn());
+      waiters.length = 0;
+    });
+}
 
 export default function NaverMap({
   lat = 37.5665,
   lng = 126.978,
-  markers = [],
+  markers,
   height = '400px',
   onMarkerClick,
 }: NaverMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<any>(null);
-  const markerInstances = useRef<any[]>([]);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const markerRefs = useRef<any[]>([]);
+  const onClickRef = useRef(onMarkerClick);
+  const prevMarkersJson = useRef('');
 
-  // 스크립트 로드
+  // onMarkerClick 최신 참조 유지
+  onClickRef.current = onMarkerClick;
+
+  // 지도 생성 + 언마운트 정리 (한 번만 실행)
   useEffect(() => {
-    console.log('[NaverMap 컴포넌트] 스크립트 로드 시작');
-    loadNaverMapScript()
-      .then(() => {
-        console.log('[NaverMap 컴포넌트] 스크립트 로드 성공');
-        setScriptLoaded(true);
-      })
-      .catch((err) => {
-        console.error('[NaverMap 컴포넌트] 스크립트 로드 에러:', err);
-        setError(err.message);
+    let destroyed = false;
+
+    function init() {
+      if (destroyed || !containerRef.current) return;
+      if (scriptError) return;
+
+      mapRef.current = new window.naver.maps.Map(containerRef.current, {
+        center: new window.naver.maps.LatLng(lat, lng),
+        zoom: 14,
+        zoomControl: true,
+        zoomControlOptions: { position: window.naver.maps.Position.TOP_RIGHT },
       });
-  }, []);
+    }
 
-  // 지도 초기화
-  useEffect(() => {
-    console.log('[NaverMap 컴포넌트] 지도 초기화 체크 - scriptLoaded:', scriptLoaded, 'mapRef:', !!mapRef.current, 'naver.maps:', !!window.naver?.maps);
-    if (!scriptLoaded || !mapRef.current || !window.naver?.maps) return;
+    if (scriptReady) {
+      init();
+    } else {
+      waiters.push(init);
+    }
 
-    const map = new window.naver.maps.Map(mapRef.current, {
-      center: new window.naver.maps.LatLng(lat, lng),
-      zoom: 14,
-      zoomControl: true,
-      zoomControlOptions: { position: window.naver.maps.Position.TOP_RIGHT },
-    });
-
-    mapInstance.current = map;
-
+    // 언마운트 시에만 정리
     return () => {
-      markerInstances.current.forEach((m) => m.setMap(null));
-      markerInstances.current = [];
+      destroyed = true;
+      markerRefs.current.forEach((m) => m.setMap(null));
+      markerRefs.current = [];
+      if (mapRef.current) {
+        mapRef.current.destroy();
+        mapRef.current = null;
+      }
     };
-  }, [scriptLoaded]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 빈 배열: 마운트 시 한 번만
 
-  // 마커 업데이트
+  // 마커 동기화 (마커 데이터가 실제로 변경될 때만)
   useEffect(() => {
-    const map = mapInstance.current;
-    if (!map || !window.naver?.maps) return;
+    const map = mapRef.current;
+    if (!map) return;
+
+    const list = markers ?? [];
+    const json = JSON.stringify(list);
+    if (json === prevMarkersJson.current) return; // 변경 없으면 스킵
+    prevMarkersJson.current = json;
 
     // 기존 마커 제거
-    markerInstances.current.forEach((m) => m.setMap(null));
-    markerInstances.current = [];
+    markerRefs.current.forEach((m) => m.setMap(null));
+    markerRefs.current = [];
 
-    if (markers.length === 0) return;
+    if (list.length === 0) return;
 
-    let activeInfoWindow: any = null;
+    let openIW: any = null;
 
-    markers.forEach((mk) => {
-      const pos = new window.naver.maps.LatLng(mk.lat, mk.lng);
+    list.forEach((mk) => {
       const marker = new window.naver.maps.Marker({
-        position: pos,
+        position: new window.naver.maps.LatLng(mk.lat, mk.lng),
         map,
         title: mk.title,
       });
 
-      const infoContent = mk.info
-        ? `<div style="padding:10px;min-width:150px;font-size:13px;line-height:1.5"><strong>${mk.title}</strong><br/>${mk.info}</div>`
-        : `<div style="padding:8px 12px;font-size:13px;font-weight:600">${mk.title}</div>`;
-
-      const infoWindow = new window.naver.maps.InfoWindow({
-        content: infoContent,
+      const iw = new window.naver.maps.InfoWindow({
+        content: mk.info
+          ? `<div style="padding:10px;min-width:150px;font-size:13px;line-height:1.5"><strong>${mk.title}</strong><br/>${mk.info}</div>`
+          : `<div style="padding:8px 12px;font-size:13px;font-weight:600">${mk.title}</div>`,
         borderWidth: 1,
         borderColor: '#e5e7eb',
         backgroundColor: '#fff',
@@ -100,52 +124,40 @@ export default function NaverMap({
       });
 
       window.naver.maps.Event.addListener(marker, 'click', () => {
-        if (activeInfoWindow) activeInfoWindow.close();
-        infoWindow.open(map, marker);
-        activeInfoWindow = infoWindow;
-        onMarkerClick?.(mk);
+        if (openIW) openIW.close();
+        iw.open(map, marker);
+        openIW = iw;
+        onClickRef.current?.(mk);
       });
 
-      markerInstances.current.push(marker);
+      markerRefs.current.push(marker);
     });
 
-    // 모든 마커가 보이도록 중심 조정
-    if (markers.length === 1) {
-      map.setCenter(new window.naver.maps.LatLng(markers[0].lat, markers[0].lng));
-      map.setZoom(15);
-    } else if (markers.length > 1) {
-      // 마커 중심점 계산
-      const avgLat = markers.reduce((s, m) => s + m.lat, 0) / markers.length;
-      const avgLng = markers.reduce((s, m) => s + m.lng, 0) / markers.length;
-      map.setCenter(new window.naver.maps.LatLng(avgLat, avgLng));
+    // 중심 조정
+    if (list.length === 1) {
+      map.setCenter(new window.naver.maps.LatLng(list[0].lat, list[0].lng));
+    } else {
+      const aLat = list.reduce((s, m) => s + m.lat, 0) / list.length;
+      const aLng = list.reduce((s, m) => s + m.lng, 0) / list.length;
+      map.setCenter(new window.naver.maps.LatLng(aLat, aLng));
       map.setZoom(12);
     }
-  }, [markers, onMarkerClick]);
+  }, [markers]);
 
-  // 중심 좌표 변경
+  // 마커 없을 때 중심 이동
   useEffect(() => {
-    const map = mapInstance.current;
-    if (!map || !window.naver?.maps) return;
-    if (markers.length > 0) return; // 마커가 있으면 마커 기준으로 처리
+    const map = mapRef.current;
+    if (!map || (markers && markers.length > 0)) return;
     map.panTo(new window.naver.maps.LatLng(lat, lng));
   }, [lat, lng, markers]);
 
-  if (error) {
+  if (scriptError) {
     return (
-      <div
-        style={{ height }}
-        className="flex items-center justify-center rounded-xl border border-gray-200 bg-gray-50"
-      >
-        <p className="text-sm text-gray-500">{error}</p>
+      <div style={{ height }} className="flex items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
+        <p className="text-sm text-gray-500">{scriptError}</p>
       </div>
     );
   }
 
-  return (
-    <div
-      ref={mapRef}
-      style={{ height }}
-      className="w-full rounded-xl border border-gray-200"
-    />
-  );
+  return <div ref={containerRef} style={{ height, minHeight: height }} className="w-full rounded-xl border border-gray-200" />;
 }
