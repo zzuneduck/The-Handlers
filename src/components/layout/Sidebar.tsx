@@ -31,6 +31,7 @@ const MENU_GROUPS: Record<Role, MenuGroup[]> = {
       { label: '핸들러 목록', path: '/handler/handlers' },
       { label: '랭킹', path: '/ranking' },
       { label: '통계', path: '/handler/statistics' },
+      { label: '매장 지도', path: '/store-map' },
     ]},
     { group: '자료', items: [
       { label: 'PayN 질의응답', path: '/payn-manual' },
@@ -66,6 +67,8 @@ const MENU_GROUPS: Record<Role, MenuGroup[]> = {
     { group: '통계', items: [
       { label: '전체 통계', path: '/admin/statistics' },
       { label: '랭킹', path: '/ranking' },
+      { label: '핸들러 지도', path: '/handler-map' },
+      { label: '매장 지도', path: '/store-map' },
     ]},
     { group: '시스템', items: [
       { label: '실시간 전광판', path: '/live' },
@@ -89,6 +92,8 @@ const MENU_GROUPS: Record<Role, MenuGroup[]> = {
     { group: '통계', items: [
       { label: '전체 통계', path: '/admin/statistics' },
       { label: '랭킹', path: '/ranking' },
+      { label: '핸들러 지도', path: '/handler-map' },
+      { label: '매장 지도', path: '/store-map' },
     ]},
     { group: '시스템', items: [
       { label: '실시간 전광판', path: '/live' },
@@ -102,6 +107,8 @@ const MENU_GROUPS: Record<Role, MenuGroup[]> = {
     { group: '정보', items: [
       { label: '통계', path: '/payn/statistics' },
       { label: '랭킹', path: '/ranking' },
+      { label: '핸들러 지도', path: '/handler-map' },
+      { label: '매장 지도', path: '/store-map' },
     ]},
     { group: '기타', items: [
       { label: '실시간 전광판', path: '/live' },
@@ -116,6 +123,7 @@ const MENU_GROUPS: Record<Role, MenuGroup[]> = {
     ]},
     { group: '정보', items: [
       { label: '통계', path: '/geotech/statistics' },
+      { label: '매장 지도', path: '/store-map' },
     ]},
     { group: '기타', items: [
       { label: '실시간 전광판', path: '/live' },

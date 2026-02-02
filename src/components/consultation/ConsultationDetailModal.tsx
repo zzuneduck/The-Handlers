@@ -4,6 +4,7 @@ import type { ConsultationStatusKey } from '../../constants/consultationStatus';
 import { BUSINESS_TYPES } from '../../constants/businessTypes';
 import { STORE_SIZES } from '../../constants/storeSize';
 import { HARDWARE_TYPES } from '../../constants/hardwareTypes';
+import NaverMap from '../map/NaverMap';
 
 export interface ConsultationDetail {
   id: string;
@@ -13,6 +14,8 @@ export interface ConsultationDetail {
   region: string;
   sub_region?: string | null;
   address?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   business_type: string;
   store_size?: string | null;
   table_count?: number | null;
@@ -92,6 +95,16 @@ export default function ConsultationDetailModal({ consultation, isOpen, onClose 
             {c.owner_phone && <Row label="연락처" value={c.owner_phone} />}
             <Row label="지역" value={`${c.region}${c.sub_region ? ` ${c.sub_region}` : ''}`} />
             {c.address && <Row label="주소" value={c.address} />}
+            {c.lat != null && c.lng != null && (
+              <div className="mt-2">
+                <NaverMap
+                  lat={c.lat}
+                  lng={c.lng}
+                  markers={[{ lat: c.lat, lng: c.lng, title: c.store_name }]}
+                  height="200px"
+                />
+              </div>
+            )}
             <Row label="업종" value={getLabel(BUSINESS_TYPES, c.business_type)} />
             {c.store_size && <Row label="매장규모" value={getLabel(STORE_SIZES, c.store_size)} />}
             {c.table_count != null && <Row label="테이블 수" value={`${c.table_count}개`} />}
