@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import PageTransition from '../common/PageTransition';
+import ErrorBoundary from '../common/ErrorBoundary';
 
 export default function DashboardLayout() {
   const location = useLocation();
@@ -13,11 +14,13 @@ export default function DashboardLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto p-6">
-          <AnimatePresence mode="wait">
-            <PageTransition key={location.pathname}>
-              <Outlet />
-            </PageTransition>
-          </AnimatePresence>
+          <ErrorBoundary key={location.pathname}>
+            <AnimatePresence mode="wait">
+              <PageTransition key={location.pathname}>
+                <Outlet />
+              </PageTransition>
+            </AnimatePresence>
+          </ErrorBoundary>
         </main>
       </div>
     </div>

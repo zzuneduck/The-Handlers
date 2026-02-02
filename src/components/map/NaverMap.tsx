@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { loadNaverMapScript } from '../../lib/naverMap';
 
 export interface MapMarker {
@@ -48,6 +48,7 @@ export default function NaverMap({
   const markerRefs = useRef<any[]>([]);
   const onClickRef = useRef(onMarkerClick);
   const prevMarkersJson = useRef('');
+  const [error, setError] = useState('');
 
   // onMarkerClick 최신 참조 유지
   onClickRef.current = onMarkerClick;
@@ -58,14 +59,22 @@ export default function NaverMap({
 
     function init() {
       if (destroyed || !containerRef.current) return;
-      if (scriptError) return;
+      if (scriptError) { setError(scriptError); return; }
 
-      mapRef.current = new window.naver.maps.Map(containerRef.current, {
-        center: new window.naver.maps.LatLng(lat, lng),
-        zoom: 14,
-        zoomControl: true,
-        zoomControlOptions: { position: window.naver.maps.Position.TOP_RIGHT },
-      });
+      try {
+        if (!window.naver?.maps) {
+          setError('지도를 불러올 수 없습니다');
+          return;
+        }
+        mapRef.current = new window.naver.maps.Map(containerRef.current, {
+          center: new window.naver.maps.LatLng(lat, lng),
+          zoom: 14,
+          zoomControl: true,
+          zoomControlOptions: { position: window.naver.maps.Position.TOP_RIGHT },
+        });
+      } catch (e: any) {
+        setError('지도를 불러올 수 없습니다');
+      }
     }
 
     if (scriptReady) {
@@ -77,10 +86,14 @@ export default function NaverMap({
     // 언마운트 시에만 정리
     return () => {
       destroyed = true;
-      markerRefs.current.forEach((m) => m.setMap(null));
+      // waiters에서 제거 (스크립트 로드 전 언마운트 시 메모리 누수 방지)
+      const idx = waiters.indexOf(init);
+      if (idx !== -1) waiters.splice(idx, 1);
+
+      markerRefs.current.forEach((m) => { try { m.setMap(null); } catch { /* */ } });
       markerRefs.current = [];
       if (mapRef.current) {
-        mapRef.current.destroy();
+        try { mapRef.current.destroy(); } catch { /* */ }
         mapRef.current = null;
       }
     };
@@ -90,11 +103,11 @@ export default function NaverMap({
   // 마커 동기화 (마커 데이터가 실제로 변경될 때만)
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !window.naver?.maps) return;
 
     const list = markers ?? [];
     const json = JSON.stringify(list);
-    if (json === prevMarkersJson.current) return; // 변경 없으면 스킵
+    if (json === prevMarkersJson.current) return;
     prevMarkersJson.current = json;
 
     // 기존 마커 제거
@@ -103,58 +116,62 @@ export default function NaverMap({
 
     if (list.length === 0) return;
 
-    let openIW: any = null;
+    try {
+      let openIW: any = null;
 
-    list.forEach((mk) => {
-      const marker = new window.naver.maps.Marker({
-        position: new window.naver.maps.LatLng(mk.lat, mk.lng),
-        map,
-        title: mk.title,
+      list.forEach((mk) => {
+        const marker = new window.naver.maps.Marker({
+          position: new window.naver.maps.LatLng(mk.lat, mk.lng),
+          map,
+          title: mk.title,
+        });
+
+        const iw = new window.naver.maps.InfoWindow({
+          content: mk.info
+            ? `<div style="padding:10px;min-width:150px;font-size:13px;line-height:1.5"><strong>${mk.title}</strong><br/>${mk.info}</div>`
+            : `<div style="padding:8px 12px;font-size:13px;font-weight:600">${mk.title}</div>`,
+          borderWidth: 1,
+          borderColor: '#e5e7eb',
+          backgroundColor: '#fff',
+          anchorSize: { width: 10, height: 10 },
+          anchorColor: '#fff',
+        });
+
+        window.naver.maps.Event.addListener(marker, 'click', () => {
+          if (openIW) openIW.close();
+          iw.open(map, marker);
+          openIW = iw;
+          onClickRef.current?.(mk);
+        });
+
+        markerRefs.current.push(marker);
       });
 
-      const iw = new window.naver.maps.InfoWindow({
-        content: mk.info
-          ? `<div style="padding:10px;min-width:150px;font-size:13px;line-height:1.5"><strong>${mk.title}</strong><br/>${mk.info}</div>`
-          : `<div style="padding:8px 12px;font-size:13px;font-weight:600">${mk.title}</div>`,
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
-        backgroundColor: '#fff',
-        anchorSize: { width: 10, height: 10 },
-        anchorColor: '#fff',
-      });
-
-      window.naver.maps.Event.addListener(marker, 'click', () => {
-        if (openIW) openIW.close();
-        iw.open(map, marker);
-        openIW = iw;
-        onClickRef.current?.(mk);
-      });
-
-      markerRefs.current.push(marker);
-    });
-
-    // 중심 조정
-    if (list.length === 1) {
-      map.setCenter(new window.naver.maps.LatLng(list[0].lat, list[0].lng));
-    } else {
-      const aLat = list.reduce((s, m) => s + m.lat, 0) / list.length;
-      const aLng = list.reduce((s, m) => s + m.lng, 0) / list.length;
-      map.setCenter(new window.naver.maps.LatLng(aLat, aLng));
-      map.setZoom(12);
+      // 중심 조정
+      if (list.length === 1) {
+        map.setCenter(new window.naver.maps.LatLng(list[0].lat, list[0].lng));
+      } else {
+        const aLat = list.reduce((s, m) => s + m.lat, 0) / list.length;
+        const aLng = list.reduce((s, m) => s + m.lng, 0) / list.length;
+        map.setCenter(new window.naver.maps.LatLng(aLat, aLng));
+        map.setZoom(12);
+      }
+    } catch {
+      // 마커 생성 실패해도 지도는 유지
     }
   }, [markers]);
 
   // 마커 없을 때 중심 이동
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || (markers && markers.length > 0)) return;
-    map.panTo(new window.naver.maps.LatLng(lat, lng));
+    if (!map || !window.naver?.maps || (markers && markers.length > 0)) return;
+    try { map.panTo(new window.naver.maps.LatLng(lat, lng)); } catch { /* ignore */ }
   }, [lat, lng, markers]);
 
-  if (scriptError) {
+  if (error || scriptError) {
     return (
       <div style={{ height }} className="flex items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
-        <p className="text-sm text-gray-500">{scriptError}</p>
+        <p className="text-sm text-gray-500">지도를 불러올 수 없습니다</p>
       </div>
     );
   }

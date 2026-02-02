@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import type { Role } from '../../types';
@@ -132,7 +133,7 @@ const MENU_GROUPS: Record<Role, MenuGroup[]> = {
   ],
 };
 
-export default function Sidebar() {
+export default memo(function Sidebar() {
   const { user } = useAuthStore();
   if (!user) return null;
 
@@ -158,7 +159,7 @@ export default function Sidebar() {
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  end={item.path === dashboardPath}
+                  end
                   data-sound="hover"
                   className={({ isActive }) =>
                     `block rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${
@@ -177,4 +178,4 @@ export default function Sidebar() {
       </nav>
     </aside>
   );
-}
+});
