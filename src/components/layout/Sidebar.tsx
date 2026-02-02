@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import type { Role } from '../../types';
 
@@ -135,11 +135,11 @@ const MENU_GROUPS: Record<Role, MenuGroup[]> = {
 
 export default memo(function Sidebar() {
   const { user } = useAuthStore();
+  const { pathname } = useLocation();
   if (!user) return null;
 
   const role = user.role as Role;
   const groups = MENU_GROUPS[role];
-  const dashboardPath = groups[0]?.items[0]?.path;
 
   return (
     <aside className="flex w-60 flex-col border-r border-gray-200 bg-sidebar text-white dark:border-gray-700">
@@ -155,23 +155,23 @@ export default memo(function Sidebar() {
               </p>
             )}
             <div className="space-y-1">
-              {g.items.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end
-                  data-sound="hover"
-                  className={({ isActive }) =>
-                    `block rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${
+              {g.items.map((item) => {
+                const isActive = pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    data-sound="hover"
+                    className={`block rounded-xl px-4 py-2.5 text-sm transition-all duration-200 ${
                       isActive
                         ? 'bg-naver text-white font-medium shadow-md'
                         : 'text-gray-400 hover:bg-white/10 hover:text-white'
-                    }`
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         ))}
