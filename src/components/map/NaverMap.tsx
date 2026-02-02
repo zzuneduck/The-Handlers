@@ -16,36 +16,7 @@ interface NaverMapProps {
   onMarkerClick?: (marker: MapMarker) => void;
 }
 
-const SCRIPT_ID = 'naver-map-sdk';
-
-function loadNaverMapScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.naver?.maps) {
-      resolve();
-      return;
-    }
-
-    const existing = document.getElementById(SCRIPT_ID);
-    if (existing) {
-      existing.addEventListener('load', () => resolve());
-      return;
-    }
-
-    const clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
-    if (!clientId) {
-      reject(new Error('VITE_NAVER_MAP_CLIENT_ID 환경변수가 설정되지 않았습니다.'));
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = SCRIPT_ID;
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}&submodules=geocoder`;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('네이버 지도 스크립트 로드 실패'));
-    document.head.appendChild(script);
-  });
-}
+import { loadNaverMapScript } from '../../lib/naverMap';
 
 export default function NaverMap({
   lat = 37.5665,
@@ -62,13 +33,21 @@ export default function NaverMap({
 
   // 스크립트 로드
   useEffect(() => {
+    console.log('[NaverMap 컴포넌트] 스크립트 로드 시작');
     loadNaverMapScript()
-      .then(() => setScriptLoaded(true))
-      .catch((err) => setError(err.message));
+      .then(() => {
+        console.log('[NaverMap 컴포넌트] 스크립트 로드 성공');
+        setScriptLoaded(true);
+      })
+      .catch((err) => {
+        console.error('[NaverMap 컴포넌트] 스크립트 로드 에러:', err);
+        setError(err.message);
+      });
   }, []);
 
   // 지도 초기화
   useEffect(() => {
+    console.log('[NaverMap 컴포넌트] 지도 초기화 체크 - scriptLoaded:', scriptLoaded, 'mapRef:', !!mapRef.current, 'naver.maps:', !!window.naver?.maps);
     if (!scriptLoaded || !mapRef.current || !window.naver?.maps) return;
 
     const map = new window.naver.maps.Map(mapRef.current, {

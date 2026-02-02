@@ -16,20 +16,33 @@ function nv(): any {
  * 이미 로드됐으면 즉시 resolve합니다.
  */
 export function loadNaverMapScript(): Promise<void> {
-  if (window.naver?.maps) return Promise.resolve();
-  if (loadPromise) return loadPromise;
-
-  const clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
-  if (!clientId) {
-    return Promise.reject(new Error('VITE_NAVER_MAP_CLIENT_ID 환경변수가 설정되지 않았습니다.'));
+  if (window.naver?.maps) {
+    console.log('[NaverMap] 이미 로드됨');
+    return Promise.resolve();
   }
+  if (loadPromise) {
+    console.log('[NaverMap] 로드 진행 중 (기존 promise 반환)');
+    return loadPromise;
+  }
+
+  const clientId = 'm7a40tylj4';
+
+  const scriptUrl = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}&submodules=geocoder`;
+  console.log('[NaverMap] 스크립트 로드 시작:', scriptUrl);
 
   loadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = 'https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=' + clientId + '&submodules=geocoder';
+    script.src = scriptUrl;
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('네이버 지도 스크립트 로드 실패'));
+    script.onload = () => {
+      console.log('[NaverMap] 스크립트 로드 완료. naver.maps 존재:', !!window.naver?.maps);
+      resolve();
+    };
+    script.onerror = (e) => {
+      console.error('[NaverMap] 스크립트 로드 실패:', e);
+      loadPromise = null; // 재시도 가능하도록 초기화
+      reject(new Error('네이버 지도 스크립트 로드 실패'));
+    };
     document.head.appendChild(script);
   });
 

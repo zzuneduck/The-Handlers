@@ -4,20 +4,24 @@ import { soundManager } from '../../lib/soundManager';
 export default function GlobalSoundProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleMouseEnter = (e: MouseEvent) => {
-      const target = (e.target as HTMLElement).closest('[data-sound]');
-      if (!target) return;
-      const sound = target.getAttribute('data-sound');
-      if (sound === 'hover') {
-        soundManager.play('hover');
+      if (e.target && typeof (e.target as any).closest === 'function') {
+        const target = (e.target as any).closest('[data-sound]');
+        if (!target) return;
+        const sound = target.getAttribute('data-sound');
+        if (sound === 'hover') {
+          soundManager.play('hover');
+        }
       }
     };
 
     const handleClick = (e: MouseEvent) => {
-      const target = (e.target as HTMLElement).closest('[data-sound]');
-      if (!target) return;
-      const sound = target.getAttribute('data-sound');
-      if (sound === 'click') {
-        soundManager.play('click');
+      if (e.target && typeof (e.target as any).closest === 'function') {
+        const target = (e.target as any).closest('[data-sound]');
+        if (!target) return;
+        const sound = target.getAttribute('data-sound');
+        if (sound === 'click') {
+          soundManager.play('click');
+        }
       }
     };
 

@@ -132,7 +132,8 @@ export default function AdminDashboard() {
     async function initMap() {
       try {
         await loadNaverMapScript();
-      } catch {
+      } catch (err) {
+        console.error('[Dashboard] 네이버 지도 로드 실패:', err);
         return;
       }
 
