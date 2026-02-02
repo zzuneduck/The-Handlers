@@ -83,9 +83,9 @@ export default function ConsultationForm() {
         handler_id: user.id,
         handler_name: user.name,
         store_name: storeName,
-        phone: phone,
+        owner_phone: phone,
         region,
-        district: subRegion,
+        sub_region: subRegion,
         address: storeAddress || `${region} ${subRegion}`,
         lat: lat ?? null,
         lng: lng ?? null,
@@ -126,24 +126,6 @@ export default function ConsultationForm() {
         region,
         store_name: storeName,
       });
-
-      // paynpos로 데이터 전송 (새 탭)
-      const params = new URLSearchParams({
-        storeName,
-        phone,
-        region,
-        district: subRegion,
-        address: storeAddress,
-        businessType,
-        handlerName: user.name,
-        utm_source: 'handler',
-        utm_medium: 'referral',
-        utm_campaign: 'partnership',
-      });
-      window.open(
-        `https://www.paynpos.co.kr/?${params.toString()}#form`,
-        '_blank'
-      );
 
       toast.success('상담 신청이 완료되었습니다!');
       navigate('/handler/consultations');
